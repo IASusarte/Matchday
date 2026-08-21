@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'match_detail_view.dart';
+//import '../models/partida.dart';
+import '../data/test_data.dart';
 
 class ActiveMatchesView extends StatelessWidget {
   const ActiveMatchesView({super.key});
@@ -18,7 +20,33 @@ class ActiveMatchesView extends StatelessWidget {
         padding: const EdgeInsets.all(20),
         children: [
 
-          Card(
+          ListView.builder(
+            itemCount: testPartidas.length,
+            itemBuilder: (context, index) {
+              final partida = testPartidas[index];
+              return Card(
+                child: ListTile(
+                  title: Text(partida.idDeporte.toString()),
+                  subtitle: Text(
+                    '${partida.fecha}\n'
+                    '${partida.hora}\n'
+                    '${partida.descripcion}',
+                  ),
+                  trailing: const Icon(Icons.arrow_forward),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => MatchDetailView(partida: partida),
+                      ),
+                    );
+                  },
+                ),
+              );
+            },
+          )
+
+          /*Card(
             child: ListTile(
               title: const Text('Partido de Fútbol'),
               subtitle: const Text(
@@ -34,7 +62,7 @@ class ActiveMatchesView extends StatelessWidget {
                 );
               },
             ),
-          ),
+          ),*/
         ],
       ),
     );

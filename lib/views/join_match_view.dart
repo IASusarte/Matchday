@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import '../data/test_data.dart';
+import '../models/solicitud.dart';
+import '../models/partida.dart';
 
 class JoinMatchView extends StatelessWidget {
   const JoinMatchView({super.key});
@@ -43,22 +46,33 @@ class JoinMatchView extends StatelessWidget {
 
             const SizedBox(height: 20),
 
-            partidaCard(
-              context,
-              deporte: 'Fútbol',
-              lugar: 'Estadio Municipal',
-              fecha: '20/07/2026',
-              hora: '18:00',
+            ListView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: testPartidas.length,
+              itemBuilder: (context, index) {
+                final partida = testPartidas[index];
+                return partidaCard(
+                  context,
+                  partida: partida,
+                );
+              },
             ),
 
             const SizedBox(height: 15),
 
             partidaCard(
               context,
-              deporte: 'Tenis',
-              lugar: 'Club de Tenis Curicó',
-              fecha: '20/07/2026',
-              hora: '19:00',
+              partida: Partida(
+                id: 0,
+                idDeporte: 2,
+                lugar: 'Club de Tenis Curicó',
+                fecha: DateTime.parse('2026-07-20'),
+                descripcion: 'Partido amistoso de tenis.',
+                cantJugadores: 2,
+                estado: 'pendiente',
+                hora: '19:00',
+              ),
             ),
           ],
         ),
@@ -68,10 +82,7 @@ class JoinMatchView extends StatelessWidget {
 
   Widget partidaCard(
     BuildContext context, {
-    required String deporte,
-    required String lugar,
-    required String fecha,
-    required String hora,
+    required Partida partida,
   }) {
     return Card(
       child: Padding(
@@ -81,21 +92,29 @@ class JoinMatchView extends StatelessWidget {
           children: [
 
             Text(
-              deporte,
+              partida.idDeporte.toString(),
               style: const TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.bold,
               ),
             ),
 
-            Text('Lugar: $lugar'),
-            Text('Fecha: $fecha'),
-            Text('Hora: $hora'),
+            Text('Lugar: ${partida.lugar}'),
+            Text('Fecha: ${partida.fecha}'),
+            Text('Hora: ${partida.hora}'),
 
             const SizedBox(height: 10),
 
             ElevatedButton(
               onPressed: () {
+                testSolicitudes.add(
+                  Solicitud(
+                    id: testSolicitudes.length + 1,
+                    idPartida: partida.id,
+                    idUsuario: 1,
+                    estado: 'pendiente',
+                  )
+                );
                 showDialog(
                   context: context,
                   builder: (_) => AlertDialog(

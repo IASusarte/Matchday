@@ -1,8 +1,13 @@
 import 'package:flutter/material.dart';
 import 'rate_players_view.dart';
+import '../models/partida.dart';
 
 class MatchDetailView extends StatelessWidget {
-  const MatchDetailView({super.key});
+  final Partida partida;
+
+  const MatchDetailView({
+    super.key, 
+    required this.partida});
 
   @override
   Widget build(BuildContext context) {
@@ -33,10 +38,10 @@ class MatchDetailView extends StatelessWidget {
 
           const SizedBox(height: 20),
 
-          const Text('Fecha: 20/07/2026'),
-          const Text('Hora: 18:00'),
-          const Text('Lugar: Estadio Municipal'),
-          const Text('Jugadores requeridos: 10'),
+          Text('Fecha: ${partida.fecha.toString()}'),
+          Text('Hora: ${partida.hora}'),
+          Text('Lugar: ${partida.lugar}'),
+          Text('Jugadores requeridos: ${partida.cantJugadores}'),
 
           const SizedBox(height: 20),
 
