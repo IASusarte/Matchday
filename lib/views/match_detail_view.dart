@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
-import 'rate_players_view.dart';
+//import 'rate_players_view.dart';
 import '../models/partida.dart';
+import '../data/test_data.dart';
+import 'player_rating_view.dart';
+//import '../models/participante_partida.dart';
 
 class MatchDetailView extends StatelessWidget {
   final Partida partida;
@@ -11,6 +14,21 @@ class MatchDetailView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+
+    final participantesPartida = testParticipantes.where(
+      (p) => p.idPartida == partida.id).toList();
+
+    final participantesActuales = participantesPartida.length;
+    final cuposDisponibles = partida.cantJugadores - participantesActuales;
+    final estadoPartida = cuposDisponibles <= 0
+        ? 'Llena'
+        : 'Vacantes: $cuposDisponibles';
+
+    final ocupacion = 
+    (participantesActuales /
+    partida.cantJugadores) * 100;
+
+
     return Scaffold(
       backgroundColor: const Color(0xFF43AAE8),
 
@@ -19,7 +37,7 @@ class MatchDetailView extends StatelessWidget {
         title: const Text('Detalle de la partida'),
       ),
 
-      body: Padding(
+  body: Padding(
   padding: const EdgeInsets.all(20),
   child: Card(
     child: Padding(
@@ -41,7 +59,34 @@ class MatchDetailView extends StatelessWidget {
           Text('Fecha: ${partida.fecha.toString()}'),
           Text('Hora: ${partida.hora}'),
           Text('Lugar: ${partida.lugar}'),
+          Text('Organizador: ${partida.idCreador}'),
           Text('Jugadores requeridos: ${partida.cantJugadores}'),
+          Text('Participantes actuales: $participantesActuales',),
+          Text('Cupos disponibles: $cuposDisponibles',),
+          Text('Ocupación: ${ocupacion.toStringAsFixed(0)}%',),
+          const SizedBox(height: 10),
+
+          Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 12,
+              vertical: 8,
+            ),
+            decoration: BoxDecoration(
+              color: estadoPartida == 'Completa'
+                ? Colors.red
+                : Colors.green,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Text(
+              estadoPartida,
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+              ),
+            ),
+          ),
+          Text('Estado de la partida: $estadoPartida'),
 
           const SizedBox(height: 20),
 
@@ -56,6 +101,25 @@ class MatchDetailView extends StatelessWidget {
             'Partido amistoso recreativo.',
           ),
 
+          const SizedBox(height: 20),
+                const Text(
+                  'Participantes',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+            ),
+          ),
+
+
+            ...participantesPartida.map(
+                  (participante) => ListTile(
+                    leading: const Icon(Icons.person),
+                    title: Text(
+                      'Usuario ${participante.idUsuario}',
+              ),
+            ),
+          ),
+
           const Spacer(),
 
           Center(
@@ -66,11 +130,13 @@ class MatchDetailView extends StatelessWidget {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF5850EC),
                 ),
+
+                
                 onPressed: () {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (_) => const RatePlayersView(),
+                      builder: (_) => PlayerRatingView(partida: partida, idUsuario: 0),
                     ),
                   );
                 },

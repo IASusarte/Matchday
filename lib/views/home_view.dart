@@ -6,6 +6,8 @@ import 'login_view.dart';
 import 'create_match_view.dart';
 import 'join_match_view.dart';
 import 'active_matches_view.dart';
+import 'requests_view.dart';
+import '../data/session.dart';
 
 class HomeView extends StatelessWidget {
   const HomeView({super.key});
@@ -23,12 +25,12 @@ class HomeView extends StatelessWidget {
       drawer: Drawer(
         child: ListView(
           children: [
-            const DrawerHeader(
+            DrawerHeader(
               decoration: BoxDecoration(
                 color: Color(0xFF43AAE8),
               ),
               child: Text(
-                '',
+                usuarioLogueado?.nickname ?? 'Invitado',
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: 24,
@@ -150,6 +152,22 @@ class HomeView extends StatelessWidget {
               },
               child: const Text('Partidas vigentes'),
               ),
+
+              const SizedBox(height: 30),
+
+              ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const RequestsView(),
+                  ),
+                );
+              },
+              child: const Text('Solicitudes'),
+            ),
+
+            const SizedBox(height: 30),
             ],
             ),
             ),

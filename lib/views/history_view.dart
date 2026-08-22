@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../data/test_data.dart';
+import '../data/session.dart';
 
 class HistoryView extends StatefulWidget {
   const HistoryView({super.key});
@@ -24,6 +26,29 @@ class _HistoryViewState extends State<HistoryView>
 
   @override
   Widget build(BuildContext context) {
+
+    final misParticipaciones = testParticipantes.where(
+      (p) => p.idUsuario == usuarioLogueado?.id,
+    ).toList();
+
+    final misPartidas = 
+      testPartidas.where(
+        (partida) => 
+          misParticipaciones.any(
+            (participacion) => 
+              participacion.idPartida == 
+              partida.id,
+          ),
+    ).toList();
+
+    final partidasFutbol = misPartidas.where(
+      (p) => p.idDeporte == 1,
+    ).toList();
+
+    final partidasTenis = misPartidas.where(
+      (p) => p.idDeporte == 2,
+    ).toList();
+
     return Scaffold(
       backgroundColor: const Color(0xFF43AAE8),
 
@@ -89,29 +114,73 @@ class _HistoryViewState extends State<HistoryView>
 
       body: TabBarView(
         controller: _tabController,
-        children: const [
+        children: [
 
-          Center(
-            child: Text(
-              'No posee ninguna partida registrada en este deporte',
-              style: TextStyle(
-                color: Colors.white70,
-                fontSize: 28,
+          partidasFutbol.isEmpty
+            ? const Center(
+              child: Text(
+                'No posee ninguna partida registrada en este deporte',
+                style: TextStyle(
+                  color: Colors.white70,
+                  fontSize: 28,
+                ),
+                textAlign: TextAlign.center,
               ),
-              textAlign: TextAlign.center,
-            ),
-          ),
+            )
+          : ListView.builder(
+              itemCount: partidasFutbol.length,
+              itemBuilder: (context, index) {
 
-          Center(
-            child: Text(
-              'No posee ninguna partida registrada en este deporte',
-              style: TextStyle(
-                color: Colors.white70,
-                fontSize: 28,
-              ),
-              textAlign: TextAlign.center,
+                final partida = partidasFutbol[index];
+
+                return Card(
+                  margin: const EdgeInsets.all(10),
+                  child: ListTile(
+                    title: Text(
+                      'Partida ${partida.id}',
+                    ),
+                    subtitle: Text(
+                       'Lugar: ${partida.lugar}\n'
+                       'Fecha: ${partida.fecha}\n'
+                       'Hora: ${partida.hora}',
+                    ),
+                  ),
+                );
+              },
             ),
-          ),
+
+          partidasTenis.isEmpty
+          ? const Center(
+              child: Text(
+                'No posee ninguna partida registrada en este deporte',
+                  style: TextStyle(
+                    color: Colors.white70,
+                    fontSize: 28,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            )
+          : ListView.builder(
+            itemCount: partidasTenis.length,
+            itemBuilder: (context, index) {
+
+              final partida = partidasTenis[index];
+
+              return Card(
+                margin: const EdgeInsets.all(10),
+                child: ListTile(
+                  title: Text(
+                    'Partida ${partida.id}',
+                  ),
+                  subtitle: Text(
+                    'Lugar: ${partida.lugar}\n'
+                    'Fecha: ${partida.fecha}\n'
+                    'Hora: ${partida.hora}',
+                  ),
+                  ),
+                );
+                },
+              )
         ],
       ),
     );

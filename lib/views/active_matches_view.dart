@@ -16,11 +16,8 @@ class ActiveMatchesView extends StatelessWidget {
         title: const Text('Partidas vigentes'),
       ),
 
-      body: ListView(
+      body: ListView.builder(
         padding: const EdgeInsets.all(20),
-        children: [
-
-          ListView.builder(
             itemCount: testPartidas.length,
             itemBuilder: (context, index) {
               final partida = testPartidas[index];
@@ -63,8 +60,7 @@ class ActiveMatchesView extends StatelessWidget {
               },
             ),
           ),*/
-        ],
-      ),
-    );
+        
+      );
   }
 }

@@ -2,7 +2,7 @@ class Solicitud {
   final int id;
   final int idUsuario;
   final int idPartida;
-  final String estado;
+  String estado;
 
   Solicitud({
     required this.id,

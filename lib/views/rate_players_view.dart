@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'home_view.dart';
+import '../models/evaluacion.dart';
+import '../data/test_data.dart';
 
 class RatePlayersView extends StatefulWidget {
-  const RatePlayersView({super.key});
+
+  final int idUsuario;
+  const RatePlayersView({super.key, required this.idUsuario});
 
   @override
   State<RatePlayersView> createState() => _RatePlayersViewState();
@@ -44,8 +48,8 @@ class _RatePlayersViewState extends State<RatePlayersView> {
 
             const SizedBox(height: 15),
 
-            const Text(
-              'JUANITO01',
+            Text(
+              'Usuario ${widget.idUsuario}',
               style: TextStyle(
                 color: Colors.white,
                 fontSize: 28,
@@ -109,6 +113,17 @@ class _RatePlayersViewState extends State<RatePlayersView> {
                   backgroundColor: const Color(0xFF5850EC),
                 ),
                 onPressed: () {
+                  testEvaluaciones.add(
+                    Evaluacion(
+                      id: testEvaluaciones.length + 1,
+                      idPartida: 1,
+                      idEvaluador: 1,
+                      idEvaluado: widget.idUsuario,
+                      compromiso: compromiso.toInt(),
+                      puntualidad: puntualidad.toInt(),
+                      fairplay: fairplay.toInt(),
+                      niveldejuego: nivelJuego.toInt(),
+                  ));
                   showDialog(
                     context: context,
                     builder: (_) => AlertDialog(

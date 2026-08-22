@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'signup_view.dart';
 import 'home_view.dart';
+import '../data/test_data.dart';
+import '../data/session.dart';
 
 class LoginView extends StatelessWidget {
   const LoginView({super.key});
@@ -55,6 +57,8 @@ class LoginView extends StatelessWidget {
 
               ElevatedButton(
                 onPressed: () {
+                  usuarioLogueado = demo;
+                  
                   Navigator.push(
                     context,
                     MaterialPageRoute(

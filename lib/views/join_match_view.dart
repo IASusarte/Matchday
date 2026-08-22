@@ -2,12 +2,16 @@ import 'package:flutter/material.dart';
 import '../data/test_data.dart';
 import '../models/solicitud.dart';
 import '../models/partida.dart';
+import '../data/session.dart';
 
 class JoinMatchView extends StatelessWidget {
   const JoinMatchView({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final partidasDisponibles = testPartidas.where(
+              (p) => p.idCreador != usuarioLogueado!.id,
+            ).toList();
     return Scaffold(
       backgroundColor: const Color(0xFF43AAE8),
 
@@ -46,12 +50,14 @@ class JoinMatchView extends StatelessWidget {
 
             const SizedBox(height: 20),
 
+            
+
             ListView.builder(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
-              itemCount: testPartidas.length,
+              itemCount: partidasDisponibles.length,
               itemBuilder: (context, index) {
-                final partida = testPartidas[index];
+                final partida = partidasDisponibles[index];
                 return partidaCard(
                   context,
                   partida: partida,
@@ -59,21 +65,6 @@ class JoinMatchView extends StatelessWidget {
               },
             ),
 
-            const SizedBox(height: 15),
-
-            partidaCard(
-              context,
-              partida: Partida(
-                id: 0,
-                idDeporte: 2,
-                lugar: 'Club de Tenis Curicó',
-                fecha: DateTime.parse('2026-07-20'),
-                descripcion: 'Partido amistoso de tenis.',
-                cantJugadores: 2,
-                estado: 'pendiente',
-                hora: '19:00',
-              ),
-            ),
           ],
         ),
       ),
@@ -107,12 +98,25 @@ class JoinMatchView extends StatelessWidget {
 
             ElevatedButton(
               onPressed: () {
+                final existeSolicitud = testSolicitudes.any(
+                  (s) =>
+                      s.idUsuario == usuarioLogueado!.id && 
+                      s.idPartida == partida.id,
+                );
+                if(existeSolicitud) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Ya has solicitado unirte a esta partida'),
+                    ),
+                  );
+                  return;
+                }
                 testSolicitudes.add(
                   Solicitud(
                     id: testSolicitudes.length + 1,
                     idPartida: partida.id,
-                    idUsuario: 1,
-                    estado: 'pendiente',
+                    idUsuario: usuarioLogueado!.id,
+                    estado: 'Pendiente',
                   )
                 );
                 showDialog(
@@ -125,6 +129,21 @@ class JoinMatchView extends StatelessWidget {
                     actions: [
                       TextButton(
                         onPressed: () {
+                          final participantesPartida = testParticipantes.where(
+                            (p) => p.idPartida == partida.id).length;
+
+                            if(participantesPartida >= 
+                              partida.cantJugadores) {
+
+                            ScaffoldMessenger.of(context)
+                            .showSnackBar(
+                              const SnackBar(
+                                content: Text(
+                                  'No hay cupos disponibles'),
+                              ),
+                            );
+                            return;
+                          }
                           Navigator.pop(context);
                         },
                         child: const Text('Aceptar'),
