@@ -1,10 +1,10 @@
 class Usuario {
   final int id;
-  final String rut;
-  final String nombres;
-  final String apellidos;
-  final String email;
-  final String nickname;
+  String rut;
+  String nombres;
+  String apellidos;
+  String email;
+  String nickname;
   final String password;
   final DateTime fechaNacimiento;
   final String sexo;

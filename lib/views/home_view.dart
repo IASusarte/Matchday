@@ -8,12 +8,43 @@ import 'join_match_view.dart';
 import 'active_matches_view.dart';
 import 'requests_view.dart';
 import '../data/session.dart';
+import '../data/test_data.dart';
 
 class HomeView extends StatelessWidget {
   const HomeView({super.key});
 
   @override
   Widget build(BuildContext context) {
+
+    final usuario = usuarioLogueado;
+
+    final partidasCreadas = testPartidas.where(
+      (p) => p.idCreador == usuario?.id,).length;
+
+    final partidasJugadas = testParticipantes.where(
+      (p) => p.idUsuario == usuario?.id,).length;
+
+    final solicitudesPendientes = testSolicitudes.where(
+      (s) => s.idUsuario == usuario?.id && s.estado == 'Pendiente',).length;
+
+    final evaluaciones = testEvaluaciones.where(
+      (e) => e.idEvaluado == usuario?.id,).toList();
+
+    double reputacion = 0;
+      if (evaluaciones.isNotEmpty) {
+        double suma = 0;
+        for (var e in evaluaciones) {
+          suma +- (
+            e.compromiso +
+            e.puntualidad + 
+            e.fairplay +
+            e.niveldejuego
+            ) /4;
+        }
+        reputacion = suma / evaluaciones.length;
+      }
+
+    
     return Scaffold(
       backgroundColor: const Color(0xFF43AAE8),
 
@@ -34,6 +65,42 @@ class HomeView extends StatelessWidget {
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: 24,
+                ),
+              ),
+            ),
+
+            Card(
+              child: ListTile(
+                leading: const Icon(Icons.star),
+                title: Text(
+                  'Reputación: ${reputacion.toStringAsFixed(1)} ⭐'
+                ),
+              ),
+            ),
+
+            Card(
+              child: ListTile(
+                leading: const Icon(Icons.sports_soccer),
+                title: Text(
+                  'Partidas creadas: $partidasCreadas'
+                ),
+              ),
+            ),
+
+            Card(
+              child: ListTile(
+                leading: const Icon(Icons.groups),
+                title: Text(
+                  'Partidas jugadas: $partidasJugadas'
+                ),
+              ),
+            ),
+
+            Card(
+              child: ListTile(
+                leading: const Icon(Icons.sports_soccer),
+                title: Text(
+                  'Solicitudes pendientes: $solicitudesPendientes'
                 ),
               ),
             ),

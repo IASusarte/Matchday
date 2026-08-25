@@ -1,4 +1,6 @@
+//import 'dart:js_interop';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import '../models/partida.dart';
 import '../data/test_data.dart';
 import 'active_matches_view.dart';
@@ -116,22 +118,59 @@ class _CreateMatchViewState extends State<CreateMatchView> {
 
             TextField(
               controller: fechaController,
+              readOnly: true,
               decoration: const InputDecoration(
                 labelText: 'Fecha',
                 filled: true,
                 fillColor: Colors.white,
+                suffixIcon: Icon(Icons.calendar_today)
               ),
+
+              onTap: () async {
+                final fechaSeleccionada = 
+                  await showDatePicker(
+                    context: context, 
+                    initialDate: DateTime.now(),
+                    firstDate: DateTime.now(), 
+                    lastDate: DateTime(2030)
+                    );
+                if(fechaSeleccionada != null){
+                  fechaController.text = 
+                    DateFormat('dd/MM/yyyy')
+                    .format(fechaSeleccionada);
+                  //.toIso8601String()
+                  //.split('T')[0];
+                }
+              }
             ),
 
             const SizedBox(height: 15),
 
             TextField(
               controller: horaController,
+              readOnly: true,
               decoration: const InputDecoration(
                 labelText: 'Hora',
                 filled: true,
                 fillColor: Colors.white,
+                suffixIcon: Icon(Icons.access_time)
               ),
+              onTap: () async {
+                final horaSeleccionada = 
+                  await showTimePicker(
+                    context: context, 
+                    initialTime: TimeOfDay.now()
+                    );
+                if(horaSeleccionada != null){
+                  final hora = horaSeleccionada.hour
+                  .toString()
+                  .padLeft(2, '0');
+                  final minuto = horaSeleccionada.minute
+                  .toString()
+                  .padLeft(2, '0');
+                  horaController.text = '$hora:$minuto';
+                }
+              }
             ),
 
             const SizedBox(height: 15),
@@ -246,7 +285,7 @@ class _CreateMatchViewState extends State<CreateMatchView> {
                 }
 
 
-                DateTime? fecha;
+                /*DateTime? fecha;
                 try {
                   fecha = DateTime.parse(fechaController.text);
                 } catch (_) {
@@ -256,7 +295,7 @@ class _CreateMatchViewState extends State<CreateMatchView> {
                     ),
                   );
                   return;
-                }
+                }*/
                 final maxJugadores = obtenerMaximoJugadores(deporte);
                 if (cant > maxJugadores) {
                   ScaffoldMessenger.of(context).showSnackBar(
@@ -267,11 +306,55 @@ class _CreateMatchViewState extends State<CreateMatchView> {
                   return;
                 }
 
+                final fechaSeleccionada = 
+                  DateFormat('dd/MM/yyyy').parse(fechaController.text);
+                
+                final horaCompleta = 
+                  horaController.text.split(':');
+
+                final horaSeleccionada = 
+                  int.parse(horaCompleta[0]);
+                if(
+                  horaSeleccionada < 6 ||
+                  horaSeleccionada > 23) {
+
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text(
+                        'La hora debe estar entre las 06:00 y 23:00'
+                      ),
+                    ),
+                    );
+                    return;
+                  }
+                
+                final fechaHora = DateTime(
+                  fechaSeleccionada.year,
+                  fechaSeleccionada.month,
+                  fechaSeleccionada.day,
+                  int.parse(horaCompleta[0]),
+                  int.parse(horaCompleta[1])
+                );
+
+                if (fechaHora.isBefore(DateTime.now())){
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text(
+                        'La fecha y hora no pueden se del pasado'
+                      ),
+                    ),
+                  );
+                  return;
+                }
+
+
                 final nuevaPartida = Partida(
                   idCreador: usuarioLogueado!.id,
                   id: testPartidas.length + 1,
                   idDeporte: deporte,
-                  fecha: fecha,
+                  fecha: DateTime.parse(
+                    fechaController.text
+                  ),
                   hora: horaController.text,
                   cantJugadores: 
                       int.tryParse(cantJugadoresController.text) ?? 0,

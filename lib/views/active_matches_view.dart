@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'match_detail_view.dart';
 //import '../models/partida.dart';
 import '../data/test_data.dart';
+import '../utils/sports_utils.dart';
 
 class ActiveMatchesView extends StatelessWidget {
   const ActiveMatchesView({super.key});
@@ -23,7 +24,7 @@ class ActiveMatchesView extends StatelessWidget {
               final partida = testPartidas[index];
               return Card(
                 child: ListTile(
-                  title: Text(partida.idDeporte.toString()),
+                  title: Text(obtenerNombreDeporte(partida.idDeporte)),
                   subtitle: Text(
                     '${partida.fecha}\n'
                     '${partida.hora}\n'

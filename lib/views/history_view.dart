@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../data/test_data.dart';
 import '../data/session.dart';
+import '../utils/sports_utils.dart';
 
 class HistoryView extends StatefulWidget {
   const HistoryView({super.key});
@@ -9,20 +10,8 @@ class HistoryView extends StatefulWidget {
   State<HistoryView> createState() => _HistoryViewState();
 }
 
-class _HistoryViewState extends State<HistoryView>
-    with SingleTickerProviderStateMixin {
+class _HistoryViewState extends State<HistoryView>{
 
-  late TabController _tabController;
-
-  @override
-  void initState() {
-    super.initState();
-
-    _tabController = TabController(
-      length: 2, // fútbol y tenis
-      vsync: this,
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -41,13 +30,7 @@ class _HistoryViewState extends State<HistoryView>
           ),
     ).toList();
 
-    final partidasFutbol = misPartidas.where(
-      (p) => p.idDeporte == 1,
-    ).toList();
-
-    final partidasTenis = misPartidas.where(
-      (p) => p.idDeporte == 2,
-    ).toList();
+    misPartidas.sort((a, b) => b.fecha.compareTo(a.fecha));
 
     return Scaffold(
       backgroundColor: const Color(0xFF43AAE8),
@@ -76,50 +59,12 @@ class _HistoryViewState extends State<HistoryView>
             ),
           ),
         ],
-
-        bottom: TabBar(
-          controller: _tabController,
-          indicatorColor: Colors.white,
-          labelColor: Colors.white,
-          tabs: [
-            Tab(
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Image.asset(
-                    'assets/images/futbol.png',
-                    width: 28,
-                  ),
-                  const SizedBox(width: 8),
-                  const Text('Fútbol'),
-                ],
-              ),
-            ),
-            Tab(
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Image.asset(
-                    'assets/images/tenis.png',
-                    width: 28,
-                  ),
-                  const SizedBox(width: 8),
-                  const Text('Tenis'),
-                ],
-              ),
-            ),
-          ],
-        ),
       ),
 
-      body: TabBarView(
-        controller: _tabController,
-        children: [
-
-          partidasFutbol.isEmpty
+      body: misPartidas.isEmpty
             ? const Center(
               child: Text(
-                'No posee ninguna partida registrada en este deporte',
+                'No posee ninguna partida registrada',
                 style: TextStyle(
                   color: Colors.white70,
                   fontSize: 28,
@@ -128,61 +73,56 @@ class _HistoryViewState extends State<HistoryView>
               ),
             )
           : ListView.builder(
-              itemCount: partidasFutbol.length,
+              itemCount: misPartidas.length,
               itemBuilder: (context, index) {
 
-                final partida = partidasFutbol[index];
+                final partida = misPartidas[index];
+
+                final organizador = testUsuarios.firstWhere(
+                  (u) => u.id == partida.idCreador
+                );
+
+                final cantParticipantes = testParticipantes.where(
+                  (p) => p.idPartida == partida.id
+                ).length;
+
+                Color colorEstado;
+                switch (partida.estado){
+
+                  case 'Finalizada':
+                    colorEstado = Colors.grey;
+                    break;
+
+                  case 'Completa':
+                    colorEstado = Colors.red;
+                    break;
+
+                  default: 
+                    colorEstado = Colors.green;
+                }
 
                 return Card(
+                  color: colorEstado.withValues(alpha: 0.15),
                   margin: const EdgeInsets.all(10),
                   child: ListTile(
                     title: Text(
-                      'Partida ${partida.id}',
+                      obtenerNombreDeporte(partida.idDeporte),
                     ),
                     subtitle: Text(
+                       'Estado: ${partida.estado}\n'
+                       'Organizador: ${organizador.nickname}\n'
+                       'Participantes: '
+                       '$cantParticipantes/${partida.cantJugadores}''\n'
                        'Lugar: ${partida.lugar}\n'
                        'Fecha: ${partida.fecha}\n'
-                       'Hora: ${partida.hora}',
+                       'Hora: ${partida.hora}\n'
+                       'Descripción: ${partida.descripcion}\n',
                     ),
                   ),
                 );
               },
             ),
 
-          partidasTenis.isEmpty
-          ? const Center(
-              child: Text(
-                'No posee ninguna partida registrada en este deporte',
-                  style: TextStyle(
-                    color: Colors.white70,
-                    fontSize: 28,
-                ),
-                textAlign: TextAlign.center,
-              ),
-            )
-          : ListView.builder(
-            itemCount: partidasTenis.length,
-            itemBuilder: (context, index) {
-
-              final partida = partidasTenis[index];
-
-              return Card(
-                margin: const EdgeInsets.all(10),
-                child: ListTile(
-                  title: Text(
-                    'Partida ${partida.id}',
-                  ),
-                  subtitle: Text(
-                    'Lugar: ${partida.lugar}\n'
-                    'Fecha: ${partida.fecha}\n'
-                    'Hora: ${partida.hora}',
-                  ),
-                  ),
-                );
-                },
-              )
-        ],
-      ),
     );
   }
 }

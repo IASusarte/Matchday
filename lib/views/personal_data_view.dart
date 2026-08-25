@@ -1,10 +1,37 @@
 import 'package:flutter/material.dart';
 import '../data/test_data.dart';
-import '../utils/reputation_utild.dart';
+import '../utils/reputation_utils.dart';
 import '../data/session.dart';
 
-class PersonalDataView extends StatelessWidget {
+class PersonalDataView extends StatefulWidget {
   const PersonalDataView({super.key});
+
+  @override
+  State<PersonalDataView> createState() => 
+      _PersonalDataViewState();
+
+}
+
+class _PersonalDataViewState extends State<PersonalDataView>{
+  final nombresController = TextEditingController();
+  final apellidosController = TextEditingController();
+  final emailController = TextEditingController();
+  final nicknameController = TextEditingController();
+  final rutController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+
+    final usuario = usuarioLogueado;
+
+    nombresController.text = usuario?.nombres ?? '';
+    apellidosController.text = usuario?.apellidos ?? '';
+    emailController.text = usuario?.email ?? '';
+    nicknameController.text = usuario?.nickname ?? '';
+    rutController.text = usuario?.rut ?? '';
+
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -59,11 +86,16 @@ class PersonalDataView extends StatelessWidget {
 
             const SizedBox(height: 30),
 
-            _campo('Nombres', valor: usuario?.nombres ?? ''),
-            _campo('Apellidos', valor: usuario?.apellidos ?? ''),
-            _campo('Correo', valor: usuario?.email ?? ''),
-            _campo('Nickname', valor: usuario?.nickname ?? ''),
-            _campo('RUT', valor: usuario?.rut ?? ''),
+            //_campo('Nombres', valor: usuario?.nombres ?? ''),
+            //_campo('Apellidos', valor: usuario?.apellidos ?? ''),
+            //_campo('Correo', valor: usuario?.email ?? ''),
+            //_campo('Nickname', valor: usuario?.nickname ?? ''),
+            //_campo('RUT', valor: usuario?.rut ?? ''),
+            TextField(controller: nombresController),
+            TextField(controller: apellidosController),
+            TextField(controller: emailController),
+            TextField(controller: nicknameController),
+            TextField(controller: rutController),
             _campo('Fecha nacimiento', valor: usuario?.fechaNacimiento.toString() ?? ''),
             _campo('Sexo', valor: usuario?.sexo ?? ''),
 
@@ -120,7 +152,33 @@ class PersonalDataView extends StatelessWidget {
 
 
             ElevatedButton(
-              onPressed: () {},
+              onPressed: () {
+                if (usuarioLogueado == null){
+                  return;
+                }
+                setState(() {
+                  usuarioLogueado!.nombres = nombresController.text;
+                  usuarioLogueado!.apellidos = apellidosController.text;
+                  usuarioLogueado!.email = emailController.text;
+                  usuarioLogueado!.nickname = nicknameController.text;
+                  usuarioLogueado!.rut = rutController.text;
+                });
+
+                final indice = testUsuarios.indexWhere(
+                  (u) => u.id == usuarioLogueado!.id
+                );
+
+                if(indice != -1){
+                  testUsuarios[indice] = usuarioLogueado!;
+                }
+
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text(
+                    'Datos actualizados'
+                    ),
+                  ),
+                );
+              },
               child: const Text('Editar'),
             ),
           ],

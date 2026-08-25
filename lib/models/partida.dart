@@ -7,7 +7,7 @@ class Partida {
   final String lugar;
   final String descripcion;
   final int cantJugadores;
-  final String estado;
+  String estado;
 
   Partida({
     required this.id,

@@ -4,6 +4,7 @@ import '../models/partida.dart';
 import '../data/test_data.dart';
 import 'player_rating_view.dart';
 //import '../models/participante_partida.dart';
+import '../utils/sports_utils.dart';
 
 class MatchDetailView extends StatelessWidget {
   final Partida partida;
@@ -20,13 +21,22 @@ class MatchDetailView extends StatelessWidget {
 
     final participantesActuales = participantesPartida.length;
     final cuposDisponibles = partida.cantJugadores - participantesActuales;
-    final estadoPartida = cuposDisponibles <= 0
-        ? 'Llena'
-        : 'Vacantes: $cuposDisponibles';
+    String estadoPartida;
+      if(partida.estado == 'Finalizada'){
+        estadoPartida = 'Finalizada';
+      } else if (cuposDisponibles <= 0){
+        estadoPartida = 'Completa';
+      } else {
+        estadoPartida = 'Activa';
+      }
 
     final ocupacion = 
     (participantesActuales /
     partida.cantJugadores) * 100;
+
+    final organizador = testUsuarios.firstWhere(
+      (u) => u.id == partida.idCreador,
+    );
 
 
     return Scaffold(
@@ -46,8 +56,8 @@ class MatchDetailView extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
 
-          const Text(
-            'Fútbol',
+          Text(
+            obtenerNombreDeporte(partida.idDeporte),
             style: TextStyle(
               fontSize: 30,
               fontWeight: FontWeight.bold,
@@ -59,7 +69,7 @@ class MatchDetailView extends StatelessWidget {
           Text('Fecha: ${partida.fecha.toString()}'),
           Text('Hora: ${partida.hora}'),
           Text('Lugar: ${partida.lugar}'),
-          Text('Organizador: ${partida.idCreador}'),
+          Text('Organizador: ${organizador.nickname}'),
           Text('Jugadores requeridos: ${partida.cantJugadores}'),
           Text('Participantes actuales: $participantesActuales',),
           Text('Cupos disponibles: $cuposDisponibles',),
@@ -72,9 +82,11 @@ class MatchDetailView extends StatelessWidget {
               vertical: 8,
             ),
             decoration: BoxDecoration(
-              color: estadoPartida == 'Completa'
-                ? Colors.red
-                : Colors.green,
+              color: estadoPartida == 'Finalizada'
+                ? Colors.grey
+                : estadoPartida == 'Completa'
+                  ? Colors.red
+                  : Colors.green,
               borderRadius: BorderRadius.circular(12),
             ),
             child: Text(
@@ -112,12 +124,17 @@ class MatchDetailView extends StatelessWidget {
 
 
             ...participantesPartida.map(
-                  (participante) => ListTile(
+                  (participante) {
+                    final usuario = testUsuarios.firstWhere(
+                      (u) => u.id == participante.idUsuario
+                    );
+                   return ListTile(
                     leading: const Icon(Icons.person),
                     title: Text(
-                      'Usuario ${participante.idUsuario}',
-              ),
-            ),
+                      usuario.nickname,
+                ),
+              );
+            },
           ),
 
           const Spacer(),
@@ -133,12 +150,49 @@ class MatchDetailView extends StatelessWidget {
 
                 
                 onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => PlayerRatingView(partida: partida, idUsuario: 0),
-                    ),
-                  );
+
+                  if(participantesPartida.isEmpty){
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text(
+                          'No hay participantes para evaluar, deben existir al menos uno para finalizar partida'
+                        ),
+                      ),
+                    );
+                  }
+
+                  showDialog(
+                    context: context, 
+                    builder: (context) => AlertDialog(
+                      title: const Text(
+                        'Finalizar Partida'
+                      ),
+                      content: const Text(
+                        '¿Estás seguro que quieres finalizar la partida'
+                        'Podrás evaluar a los participantes inmediatamente.'
+                      ),
+                      actions: [
+                        TextButton(
+                          onPressed: () {
+                            partida.estado = 'Finalizada';
+
+                            Navigator.pop(context);
+
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => PlayerRatingView(
+                                  partida: partida, idUsuario: 0),
+                                ),
+                              );
+                            
+                          } ,
+                          child: const Text('Finalizar'),
+                        )
+                      ],
+                    )
+                    );
+                 
                 },
                 child: const Text(
                   'Finalizar y puntuar',

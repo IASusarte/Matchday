@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:proyecto_titulo/utils/sports_utils.dart';
 import '../data/test_data.dart';
 import '../models/solicitud.dart';
 import '../models/partida.dart';
@@ -10,8 +11,10 @@ class JoinMatchView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final partidasDisponibles = testPartidas.where(
-              (p) => p.idCreador != usuarioLogueado!.id,
+              (p) => p.idCreador != usuarioLogueado!.id &&
+                     p.estado != 'Finalizada',
             ).toList();
+            
     return Scaffold(
       backgroundColor: const Color(0xFF43AAE8),
 
@@ -83,7 +86,7 @@ class JoinMatchView extends StatelessWidget {
           children: [
 
             Text(
-              partida.idDeporte.toString(),
+              obtenerNombreDeporte(partida.idDeporte),
               style: const TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.bold,

@@ -20,6 +20,11 @@ class _RatePlayersViewState extends State<RatePlayersView> {
 
   @override
   Widget build(BuildContext context) {
+
+    final usuario = testUsuarios.firstWhere(
+      (u) => u.id == widget.idUsuario
+    );
+
     return Scaffold(
       backgroundColor: const Color(0xFF43AAE8),
       appBar: AppBar(
@@ -49,7 +54,7 @@ class _RatePlayersViewState extends State<RatePlayersView> {
             const SizedBox(height: 15),
 
             Text(
-              'Usuario ${widget.idUsuario}',
+              usuario.nickname,
               style: TextStyle(
                 color: Colors.white,
                 fontSize: 28,

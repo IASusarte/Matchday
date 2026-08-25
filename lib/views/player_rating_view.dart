@@ -29,9 +29,12 @@ class PlayerRatingView extends StatelessWidget {
         itemCount: participantes.length,
         itemBuilder: (context, index) {
           final participante = participantes[index];
+          final usuario = testUsuarios.firstWhere(
+            (u) => u.id == participante.idUsuario
+          );
           return Card(
             child: ListTile(
-              title: Text('Usuario ${participante.idUsuario}'),
+              title: Text(usuario.nickname),
               trailing: ElevatedButton(
                 onPressed: () {
                   Navigator.push(
