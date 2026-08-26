@@ -5,6 +5,7 @@ import '../models/partida.dart';
 import '../data/test_data.dart';
 import 'active_matches_view.dart';
 import '../data/session.dart';
+import '../repos/partida_repo.dart';
 
 class CreateMatchView extends StatefulWidget {
   const CreateMatchView({super.key});
@@ -48,6 +49,8 @@ class _CreateMatchViewState extends State<CreateMatchView> {
   }
 
   int? deporteSeleccionado;
+
+  final PartidaRepo partidaRepo = PartidaRepo();
 
 
   @override
@@ -364,7 +367,7 @@ class _CreateMatchViewState extends State<CreateMatchView> {
                   );
               
 
-                  testPartidas.add(nuevaPartida);
+                  partidaRepo.crearPartida(nuevaPartida);
               
 
                   Navigator.push(

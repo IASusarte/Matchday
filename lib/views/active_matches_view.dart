@@ -1,14 +1,19 @@
 import 'package:flutter/material.dart';
 import 'match_detail_view.dart';
 //import '../models/partida.dart';
-import '../data/test_data.dart';
+//import '../data/test_data.dart';
 import '../utils/sports_utils.dart';
+import '../repos/partida_repo.dart';
 
 class ActiveMatchesView extends StatelessWidget {
   const ActiveMatchesView({super.key});
 
   @override
   Widget build(BuildContext context) {
+
+    final partidaRepo = PartidaRepo();
+    final partidas = partidaRepo.obtenerPartidas();
+
     return Scaffold(
       backgroundColor: const Color(0xFF43AAE8),
 
@@ -17,11 +22,13 @@ class ActiveMatchesView extends StatelessWidget {
         title: const Text('Partidas vigentes'),
       ),
 
+      
+
       body: ListView.builder(
         padding: const EdgeInsets.all(20),
-            itemCount: testPartidas.length,
+            itemCount: partidas.length,
             itemBuilder: (context, index) {
-              final partida = testPartidas[index];
+              final partida = partidas[index];
               return Card(
                 child: ListTile(
                   title: Text(obtenerNombreDeporte(partida.idDeporte)),
