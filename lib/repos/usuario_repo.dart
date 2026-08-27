@@ -16,4 +16,15 @@ class UsuarioRepo {
       return null;
     }
   }
+
+  void actualizarUsuario(
+    Usuario usuario
+  ){
+    final indice = testUsuarios.indexWhere(
+      (u) => u.id == usuario.id
+    );
+    if (indice != -1){
+      testUsuarios[indice] = usuario;
+    }
+  }
 }

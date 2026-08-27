@@ -5,4 +5,10 @@ class EvaluacionRepo {
   List<Evaluacion> obtenerEvaluaciones() {
     return testEvaluaciones;
   }
+
+  void crearEvaluacion(
+    Evaluacion evaluacion
+  ){
+    testEvaluaciones.add(evaluacion);
+  }
 }

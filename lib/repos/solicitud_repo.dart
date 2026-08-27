@@ -11,4 +11,8 @@ class SolicitudRepo {
   ) { 
     testSolicitudes.add(solicitud);
   }
+
+  int obtenerSiguienteId(){
+    return testSolicitudes.length + 1;
+  }
 }
