@@ -4,6 +4,7 @@ router = APIRouter()
 
 from bd import sesion_local
 from models.usuario import Usuario
+from models.deporte import Deporte
 from models.partida import Partida
 from models.solicitud import Solicitud
 from models.participante import Participante
@@ -209,42 +210,145 @@ def obtener_evaluaciones_usuario(id: int):
 
 # GET/id/reputacion
 @router.get("/usuarios/{id}/reputacion")
-def obtener_reputacion(id: int):
+def obtener_reputacion_usuario(id: int):
     db = sesion_local()
-    evaluaciones = db.query(
+    deportes = db.query(
+        Deporte
+    ).all()
+    resultado = []
+    for deporte in deportes:
+        evaluaciones_deporte = []
+        evaluaciones = db.query(
+            Evaluacion
+        ).filter(
+            Evaluacion.id_evaluado == id
+        ).all()
+        for evaluacion in evaluaciones:
+            partida = db.query(
+                Partida
+            ).filter(
+                Partida.id_partida == evaluacion.id_partida
+            ).first()
+            if (
+                partida and partida.id_deporte ==deporte.id_deporte
+            ):
+                evaluaciones_deporte.append(evaluacion)
+        if len(evaluaciones_deporte) == 0:
+            continue
+        compromiso = round(
+            sum(
+                e.compromiso
+                for e in evaluaciones_deporte
+            ) / len(evaluaciones_deporte), 2
+        )
+        puntualidad = round(
+            sum(
+                e.puntualidad
+                for e in evaluaciones_deporte
+            ) / len(evaluaciones_deporte), 2
+        )
+        fairplay = round(
+            sum(
+                e.fairplay
+                for e in evaluaciones_deporte
+            ) / len(evaluaciones_deporte), 2
+        )
+        nivel_juego = round(
+            sum(
+                e.nivel_juego
+                for e in evaluaciones_deporte
+            ) / len(evaluaciones_deporte), 2
+        )
+        resultado.append(
+            {
+                "id_deporte": deporte.id_deporte,
+                "deporte": deporte.nombre,
+                "compromiso": compromiso,
+                "puntualidad": puntualidad,
+                "fairplay": fairplay,
+                "nivel_juego": nivel_juego
+            }
+        )
+    db.close()
+    return resultado
+
+# GET/id/reputacion/id_deporte
+@router.get("/usuarios/{id}/reputacion/{id_deporte}")
+def obtener_reputacion_deporte(
+    id: int,
+    id_deporte: int
+):
+    db = sesion_local()
+    deporte = db.query(
+        Deporte
+    ).filter(
+        Deporte.id_deporte == id_deporte
+    ).first()
+    if deporte is None:
+        db.close()
+        return {
+            "ok": False,
+            "mensaje": "Deporte no encontrado"
+        }
+    evaluaciones_usuario = db.query(
         Evaluacion
     ).filter(
         Evaluacion.id_evaluado == id
     ).all()
-    db.close()
-    if len(evaluaciones) == 0:
+    evaluaciones_filtradas = []
+    for evaluacion in evaluaciones_usuario:
+        partida = db.query(
+            Partida
+        ).filter(
+            Partida.id_partida == evaluacion.id_partida
+        ).first()
+        if (
+            partida and partida.id_deporte == id_deporte
+        ):
+            evaluaciones_filtradas.append(evaluacion)
+    if len(evaluaciones_filtradas) == 0:
+        db.close()
         return {
+            "id_deporte": id_deporte,
+            "deporte": deporte.nombre,
             "compromiso": 0,
             "puntualidad": 0,
             "fairplay": 0,
             "nivel_juego": 0
         }
-    compromiso = sum(
-        e.compromiso
-        for e in evaluaciones
-    ) / len(evaluaciones)
-    puntualidad = sum(
-        e.puntualidad
-        for e in evaluaciones
-    ) / len(evaluaciones)
-    fairplay = sum(
-        e.fairplay
-        for e in evaluaciones
-    ) / len(evaluaciones)
-    nivel_juego = sum(
-        e.nivel_juego
-        for e in evaluaciones
-    ) / len(evaluaciones)
+    compromiso = round(
+        sum(
+            e.compromiso
+            for e in evaluaciones_filtradas
+        ) / len(evaluaciones_filtradas), 2
+    )
+    puntualidad = round(
+        sum(
+            e.puntualidad
+            for e in evaluaciones_filtradas
+        ) / len(evaluaciones_filtradas), 2
+    )
+    fairplay = round(
+        sum(
+            e.fairplay
+            for e in evaluaciones_filtradas
+        ) / len(evaluaciones_filtradas), 2
+    )
+    nivel_juego = round(
+        sum(
+            e.nivel_juego
+            for e in evaluaciones_filtradas
+        ) / len(evaluaciones_filtradas), 2
+    )
+    db.close()
     return {
-        "compromiso": round(compromiso, 2),
-        "puntualidad": round(puntualidad, 2),
-        "fairplay": round(fairplay, 2),
-        "nivel_juego": round(nivel_juego, 2)
+        "id_deporte": deporte.id_deporte,
+        "deporte": deporte.nombre,
+        "compromiso": compromiso,
+        "puntualidad": puntualidad,
+        "fairplay": fairplay,
+        "nivel_juego": nivel_juego,
+        "cantidad_evaluaciones": len(evaluaciones_filtradas)
     }
 
 # GET/id/historial

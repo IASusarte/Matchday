@@ -12,6 +12,18 @@ from schems.participante_schem import CrearParticipante
 @router.post("/participantes")
 def crear_participante(datos: CrearParticipante):
     db = sesion_local()
+    participante_existente = db.query(
+        Participante
+    ).filter(
+        Participante.id_usuario == datos.id_usuario,
+        Participante.id_partida == datos.id_partida
+    ).first()
+    if participante_existente:
+        db.close()
+        return {
+            "ok": False,
+            "mensaje": "El usuario ya participa en esta partida"
+        }
     participante = Participante(
         id_usuario=datos.id_usuario,
         id_partida=datos.id_partida

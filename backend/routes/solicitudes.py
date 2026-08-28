@@ -12,6 +12,18 @@ from schems.solicitud_schem import CrearSolicitud
 @router.post("/solicitudes")
 def crear_solicitud(datos: CrearSolicitud):
     db = sesion_local()
+    solicitud_existente = db.query(
+        Solicitud
+    ).filter(
+        Solicitud.id_usuario == datos.id_usuario,
+        Solicitud.id_partida == datos.id_partida
+    ).first()
+    if solicitud_existente:
+        db.close()
+        return {
+            "ok": False,
+            "mensaje": "Ya existe una solicitud para esta partida"
+        }
     nueva_solicitud = Solicitud(
         id_usuario=datos.id_usuario,
         id_partida=datos.id_partida,

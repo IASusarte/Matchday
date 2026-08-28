@@ -247,6 +247,33 @@ def obtener_participantes_partida(id: int):
     db.close()
     return res
 
+# GET/id/disponibilidad
+@router.get("/partidas/{id}/disponibilidad")
+def obtener_disponibilidad(id: int):
+    db = sesion_local()
+    partida = db.query(
+        Partida
+    ).filter(
+        Partida.id_partida == id
+    ).first()
+    if partida is None:
+        db.close()
+        return {
+            "ok": False,
+            "mensaje": "Partida no encontrada"
+        }
+    ocupados = db.query(
+        Participante
+    ).filter(
+        Participante.id_partida == id
+    ).count()
+    db.close()
+    return {
+        "capacidad": partida.cant_jugadores,
+        "ocupados": ocupados,
+        "disponibles": partida.cant_jugadores - ocupados
+    }
+
 # PUT/id
 @router.put("/partidas/{id}")
 def actualizar_partida(
@@ -330,6 +357,40 @@ def aceptar_solicitud(
             "mensaje": "La solicitud no pertenece a esta partida"
         }
     solicitud.estado = "Aceptada"
+    if partida is None:
+        db.close()
+        return {
+            "ok": False,
+            "mensaje": "Partida no encontrada"
+        }
+    partida = db.query(
+        Partida
+    ).filter(
+        Partida.id_partida == id
+    ).first()
+    participantes_actuales = db.query(
+        Participante
+    ).filter(
+        Participante.id_partida == id
+    ).count()
+    if participantes_actuales >= partida.cant_jugadores:
+        db.close()
+        return {
+            "ok": False,
+            "mensaje": "La partida ya está completa"
+        }
+    participante_existente = db.query(
+        Participante
+    ).filter(
+        Participante.id_usuario == solicitud.id_usuario,
+        Participante.id_partida == id
+    ).first()
+    if participante_existente:
+        db.close()
+        return {
+            "ok": False,
+            "mensaje": "El usuario ya participa en esta partida"
+        }
     participante = Participante(
         id_usuario=solicitud.id_usuario,
         id_partida=id
