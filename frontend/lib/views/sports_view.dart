@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:proyecto_titulo/api/api_sports.dart';
 import 'login_view.dart';
 
 class SportsView extends StatefulWidget {
@@ -10,10 +11,33 @@ class SportsView extends StatefulWidget {
 
 class _SportsViewState extends State<SportsView> {
 
-  bool futbol = false;
-  bool tenis = false;
-  bool basquet = false;
-  bool voleibol = false;
+  List<dynamic> deportes = [];
+  List<int> seleccionados = [];
+
+  Future<void> finalizarRegistro() async {
+
+  print(seleccionados);
+
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    cargarDeportes();
+  }
+
+  Future<void> cargarDeportes() async {
+    final data = await ApiSports.obtenerDeportes();
+    setState(() {
+      deportes = data;
+    });
+  }
+
+
+  //bool futbol = false;
+  //bool tenis = false;
+  //bool basquet = false;
+  //bool voleibol = false;
 
   @override
   Widget build(BuildContext context) {
@@ -44,37 +68,31 @@ class _SportsViewState extends State<SportsView> {
                     childAspectRatio: 1.3,
                     mainAxisSpacing: 20,
                     crossAxisSpacing: 20,
-                children: [
-
-                  deporteCard(
-                    'assets/images/futbol.png',
-                    futbol,
-                    (v) => setState(() => futbol = v!),
-                  ),
-
-                  deporteCard(
-                    'assets/images/tenis.png',
-                    tenis,
-                    (v) => setState(() => tenis = v!),
-                  ),
-
-                  deporteCard(
-                    'assets/images/basquet.png',
-                    basquet,
-                    (v) => setState(() => basquet = v!),
-                  ),
-
-                  deporteCard(
-                    'assets/images/volei.png',
-                    voleibol,
-                    (v) => setState(() => voleibol = v!),
-                  ),
-                ],
+                children: deportes.map((deporte) {
+                  return Card(
+                    child: CheckboxListTile(
+                      title: Text(deporte["nombre"]),
+                      
+                      value: seleccionados.contains(deporte["id"]),
+                      
+                      onChanged: (value) {
+                        setState(() {
+                          if (value == true) {
+                            seleccionados.add(deporte["id"]);
+                            } else {
+                              seleccionados.remove(deporte["id"]);
+                              }
+                          });
+                        },
+                    ),
+                  );
+                }).toList(),
               ),
             ),
 
             ElevatedButton(
               onPressed: () {
+                finalizarRegistro;
 
                 showDialog(
                   context: context,

@@ -1,8 +1,25 @@
 import 'package:flutter/material.dart';
 import 'sports_view.dart';
+import '../data/data_temp.dart';
 
-class RegisterView extends StatelessWidget {
+class RegisterView extends StatefulWidget {
   const RegisterView({super.key});
+
+  @override
+  State<RegisterView> createState() => _RegisterViewState();
+  }
+
+  class _RegisterViewState extends State<RegisterView> {
+
+  final nombresController = TextEditingController();
+  final apellidosController = TextEditingController();
+  final emailController = TextEditingController();
+  final nicknameController = TextEditingController();
+  final rutController = TextEditingController();
+  final fechaController = TextEditingController();
+  final sexoController = TextEditingController();
+  final passwordController = TextEditingController();
+  final confirmPasswordController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
@@ -39,6 +56,15 @@ class RegisterView extends StatelessWidget {
 
             ElevatedButton(
               onPressed: () {
+                RegistroTemp.nombres = nombresController.text;
+                RegistroTemp.apellidos = apellidosController.text;
+                RegistroTemp.email = emailController.text;
+                RegistroTemp.nickname = nicknameController.text;
+                RegistroTemp.rut = rutController.text;
+                RegistroTemp.fechaNacimiento = fechaController.text;
+                RegistroTemp.sexo = sexoController.text;
+                RegistroTemp.password = passwordController.text;
+
                 Navigator.push(
                   context,
                   MaterialPageRoute(

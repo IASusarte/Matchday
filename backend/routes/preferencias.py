@@ -68,7 +68,7 @@ def agregar_preferencia(
         "id": preferencia.id_preferencia
     }
 
-# DELETE/usaurios/id
+# DELETE/usuarios/id
 @router.delete("/usuarios/{id}/preferencias/{id_deporte}")
 def eliminar_preferencia(
     id: int,
