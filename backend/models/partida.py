@@ -22,5 +22,6 @@ class Partida(Base):
     hora = Column(Time)
     cant_jugadores = Column(Integer)
     lugar = Column(String(200))
+    id_ubicacion = Column(Integer)
     descripcion = Column(String(500))
     estado = Column(String(20))
