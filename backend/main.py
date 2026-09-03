@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 from routes.usuarios import router as usuarios_router
 from routes.deportes import router as deportes_router
@@ -10,6 +11,14 @@ from routes.ubicaciones import router as ubicaciones_router
 from routes.preferencias import router as preferencias_router
 
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"]
+)
 
 app.include_router(usuarios_router)
 app.include_router(deportes_router)

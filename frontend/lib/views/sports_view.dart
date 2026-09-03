@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:proyecto_titulo/api/api_sports.dart';
-import 'login_view.dart';
+//import 'login_view.dart';
+import '../api/api_user.dart';
+import '../data/session.dart';
+import '../data/data_temp.dart';
+import 'home_view.dart';
 
 class SportsView extends StatefulWidget {
   const SportsView({super.key});
@@ -11,14 +15,115 @@ class SportsView extends StatefulWidget {
 
 class _SportsViewState extends State<SportsView> {
 
+  String obtenerImagen(int idDeporte) {
+
+    switch (idDeporte) {
+      case 1:
+        return 'assets/images/futbol.png';
+      case 2:
+        return 'assets/images/tenis.png';
+      case 3:
+        return 'assets/images/basquet.png';
+      case 4:
+        return 'assets/images/volei.png';
+      default:
+        return 'assets/images/futbol.png';
+    }
+  }
+
   List<dynamic> deportes = [];
   List<int> seleccionados = [];
 
   Future<void> finalizarRegistro() async {
+      if (seleccionados.isEmpty) {
 
-  print(seleccionados);
+    ScaffoldMessenger.of(context)
+        .showSnackBar(
+      const SnackBar(
+        content: Text(
+          "Debe seleccionar al menos un deporte",
+        ),
+      ),
+    );
 
+    return;
   }
+
+  try{
+
+
+  final usuario =
+      await UserApi.crearUsuario(
+        rut: RegistroTemp.rut!,
+        nombres: RegistroTemp.nombres!,
+        apellidos: RegistroTemp.apellidos!,
+        email: RegistroTemp.email!,
+        nickname: RegistroTemp.nickname!,
+        password: RegistroTemp.password!,
+        fechaNacimiento: RegistroTemp.fechaNacimiento!,
+        sexo: RegistroTemp.sexo!,
+  );
+
+  if (!mounted) return;
+
+  if (usuario == null) {
+
+    ScaffoldMessenger.of(context)
+        .showSnackBar(
+      const SnackBar(
+        content: Text(
+          "No fue posible conectar con el servidor"
+        ),
+      ),
+    );
+
+    return;
+  }
+  
+
+  if (usuario["ok"] == false) {
+
+    ScaffoldMessenger.of(context)
+        .showSnackBar(
+      SnackBar(
+        content: Text(
+          usuario["mensaje"]
+        ),
+      ),
+    );
+
+    return;
+  }
+
+  final idUsuario = usuario["id"];
+
+  for (final idDeporte in seleccionados) {
+
+    await UserApi.agregarPreferencia(
+      idUsuario,
+      idDeporte,
+    );
+  }
+
+  Session.usuarioId = idUsuario;
+
+  if (!mounted) return;
+
+  Navigator.pushAndRemoveUntil(
+    context,
+    MaterialPageRoute(
+      builder: (_) => const HomeView(),
+    ),
+    (route) => false,
+  );
+  } catch (e) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(
+      "Error: $e"
+    )));
+  }
+  }
+
 
   @override
   void initState() {
@@ -32,6 +137,7 @@ class _SportsViewState extends State<SportsView> {
       deportes = data;
     });
   }
+
 
 
   //bool futbol = false;
@@ -59,6 +165,18 @@ class _SportsViewState extends State<SportsView> {
               ),
             ),
 
+            Align(
+              alignment: Alignment.centerLeft,
+              child: IconButton(icon: const Icon(
+                Icons.arrow_back,
+                color: Colors.white,
+                ),
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+              ),
+            ),
+
             SizedBox(
                 height: 500,
 
@@ -68,56 +186,50 @@ class _SportsViewState extends State<SportsView> {
                     childAspectRatio: 1.3,
                     mainAxisSpacing: 20,
                     crossAxisSpacing: 20,
-                children: deportes.map((deporte) {
-                  return Card(
-                    child: CheckboxListTile(
-                      title: Text(deporte["nombre"]),
-                      
-                      value: seleccionados.contains(deporte["id"]),
-                      
-                      onChanged: (value) {
-                        setState(() {
-                          if (value == true) {
-                            seleccionados.add(deporte["id"]);
-                            } else {
-                              seleccionados.remove(deporte["id"]);
-                              }
-                          });
-                        },
-                    ),
-                  );
-                }).toList(),
+                      children: deportes.map((deporte) {
+
+                        return Card(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Image.asset(
+                                obtenerImagen(
+                                  deporte["id"],
+                                ),
+                                width: 90,
+                                height: 90,
+                              ),
+                              const SizedBox(height: 10),
+                              Text(
+                                deporte["nombre"],
+                              ),
+                              Checkbox(
+                                value: seleccionados.contains(
+                                  deporte["id"],
+                                ),
+                                onChanged: (value) {
+                                  setState(() {
+                                    if (value == true) {
+                                      seleccionados.add(
+                                        deporte["id"],
+                                      );
+                                    } else {
+                                      seleccionados.remove(
+                                        deporte["id"],
+                                      );
+                                    }
+                                  });
+                                },
+                              ),
+                            ],
+                          ),
+                        );
+                      }).toList(),
               ),
             ),
 
             ElevatedButton(
-              onPressed: () {
-                finalizarRegistro;
-
-                showDialog(
-                  context: context,
-                  builder: (_) => AlertDialog(
-                    title: const Text('Registro'),
-                    content: const Text(
-                      'Usuario registrado correctamente',
-                    ),
-                    actions: [
-                      TextButton(
-                        onPressed: () {
-                            Navigator.pushAndRemoveUntil(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (context) => const LoginView(),
-                                ),
-                                (route) => false,
-                            );
-                        },
-                        child: const Text('Aceptar'),
-                      ),
-                    ],
-                  ),
-                );
-              },
+              onPressed: finalizarRegistro,
               child: const Text('Registrar'),
             ),
 

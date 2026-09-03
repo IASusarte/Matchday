@@ -9,6 +9,8 @@ class AuthApi {
     String email,
     String password,
   ) async {
+    //print("${ApiConfig.baseUrl}/login");
+    
 
     final response = await http.post(
       Uri.parse(

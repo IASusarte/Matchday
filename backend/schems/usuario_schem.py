@@ -15,4 +15,13 @@ class CrearUsuario(BaseModel):
 class Login(BaseModel):
     email: str
     password: str
+
+class ActualizarPerfil(BaseModel):
+    email: str
+    nickname: str
+    password_actual: str
+
+class CambiarPass(BaseModel):
+    password_actual: str
+    password_nueva: str
     

@@ -9,32 +9,67 @@ import 'active_matches_view.dart';
 import 'requests_view.dart';
 import '../data/session.dart';
 import '../data/test_data.dart';
+import '../api/api_user.dart';
 
-class HomeView extends StatelessWidget {
+class HomeView extends StatefulWidget {
   const HomeView({super.key});
+
+  @override
+  State<HomeView> createState() => _HomeViewState();
+
+}
+class _HomeViewState extends State<HomeView> {
+
+  Map<String, dynamic>? usuario;
+  Future<void> cargarUsuario() async {
+
+  final data = await UserApi.obtenerUsuario(Session.usuarioId!);
+
+  if (data == null) return;
+
+  setState(() {
+    usuario = data;
+  });
+}
+
+@override
+void initState() {
+  super.initState();
+  cargarUsuario();
+}
 
   @override
   Widget build(BuildContext context) {
 
-    final usuario = usuarioLogueado;
+    if (usuario == null) {
+
+      return const Scaffold(
+        body: Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+
+    }
+
 
     final partidasCreadas = testPartidas.where(
-      (p) => p.idCreador == usuario?.id,).length;
+      (p) => p.idCreador == Session.usuarioId).length;
 
     final partidasJugadas = testParticipantes.where(
-      (p) => p.idUsuario == usuario?.id,).length;
+      (p) => p.idUsuario == Session.usuarioId).length;
 
     final solicitudesPendientes = testSolicitudes.where(
-      (s) => s.idUsuario == usuario?.id && s.estado == 'Pendiente',).length;
+      (s) => s.idUsuario == Session.usuarioId && 
+             s.estado == 'Pendiente').length;
 
     final evaluaciones = testEvaluaciones.where(
-      (e) => e.idEvaluado == usuario?.id,).toList();
+      (e) => e.idEvaluado == Session.usuarioId).toList();
 
     double reputacion = 0;
       if (evaluaciones.isNotEmpty) {
         double suma = 0;
         for (var e in evaluaciones) {
-          suma +- (
+          suma += (
             e.compromiso +
             e.puntualidad + 
             e.fairplay +
@@ -61,7 +96,9 @@ class HomeView extends StatelessWidget {
                 color: Color(0xFF43AAE8),
               ),
               child: Text(
-                usuarioLogueado?.nickname ?? 'Invitado',
+                usuario != null
+                ? "Bienvenido ${usuario!["nickname"]}"
+                : "Bienvenido ",
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: 24,
@@ -150,7 +187,8 @@ class HomeView extends StatelessWidget {
             ListTile(
               leading: const Icon(Icons.logout),
               title: const Text('Cerrar sesión'),
-              onTap: () {             
+              onTap: () {     
+                Session.usuarioId = null;        
                 Navigator.pushAndRemoveUntil(
                 context,
                   MaterialPageRoute(

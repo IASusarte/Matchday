@@ -22,4 +22,31 @@ static Future<void> agregarPreferencia(
     }),
   );
 }
+
+static Future<List<dynamic>> obtenerPreferencias(
+  int id,
+) async {
+
+  final response = await http.get(
+    Uri.parse(
+      "${ApiConfig.baseUrl}/usuarios/$id/preferencias",
+    ),
+  );
+
+  return jsonDecode(
+    response.body,
+  );
+}
+
+static Future<void> eliminarPreferencia(
+  int idUsuario,
+  int idDeporte,
+) async {
+
+  await http.delete(
+    Uri.parse(
+      "${ApiConfig.baseUrl}/usuarios/$idUsuario/preferencias/$idDeporte",
+    ),
+  );
+}
 }

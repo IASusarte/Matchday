@@ -9,7 +9,7 @@ from models.partida import Partida
 from models.solicitud import Solicitud
 from models.participante import Participante
 from models.evaluacion import Evaluacion
-from schems.usuario_schem import CrearUsuario, Login
+from schems.usuario_schem import CrearUsuario, Login, ActualizarPerfil, CambiarPass
 
 # USUARIOS
 
@@ -62,6 +62,28 @@ def obtener_usuarios(id: int):
 @router.post("/usuarios")
 def crear_usuario(usuario: CrearUsuario):
     db = sesion_local()
+    correo_existente = db.query(
+    Usuario
+        ).filter(
+    Usuario.email == usuario.email
+        ).first()
+    if correo_existente:
+        db.close()
+        return {
+            "ok": False,
+            "mensaje": "El correo ya se encuentra registrado"
+        }
+    nickname_existente = db.query(
+    Usuario
+        ).filter(
+    Usuario.nickname == usuario.nickname
+        ).first()
+    if nickname_existente:
+        db.close()
+        return {
+            "ok": False,
+            "mensaje": "Nickname ocupado"
+        }
     nuevo_usuario = Usuario(
         rut=usuario.rut,
         nombres=usuario.nombres,
@@ -485,6 +507,113 @@ def obtener_dashboard(id: int):
         "promedio_puntualidad": puntualidad,
         "promedio_fairplay": fairplay,
         "promedio_nivel_juego": nivel_juego
+    }
+
+# PUT/id/perfil
+@router.put("/usuarios/{id}/perfil")
+def actualizar_perfil(
+    id: int,
+    datos: ActualizarPerfil
+):
+    db = sesion_local()
+    usuario = db.query(
+        Usuario
+    ).filter(
+        Usuario.id_usuario == id
+    ).first()
+    if usuario is None:
+        db.close()
+        return {
+            "ok": False,
+            "mensaje": "Usuario no encontrado"
+        }
+    if usuario.password != datos.password_actual:
+        db.close()
+        return {
+            "ok": False,
+            "mensaje": "Contraseña incorrecta"
+        }
+    correo_existente = db.query(
+        Usuario
+    ).filter(
+        Usuario.email == datos.email,
+        Usuario.id_usuario != id
+    ).first()
+    if correo_existente:
+        db.close()
+        return {
+            "ok": False,
+            "mensaje": "El correo ya se encuentra registrado"
+        }
+    nickname_existente = db.query(
+        Usuario
+    ).filter(
+        Usuario.nickname == datos.nickname,
+        Usuario.id_usuario != id
+    ).first()
+    if nickname_existente:
+        db.close()
+        return {
+            "ok": False,
+            "mensaje": "El nickname ya está en uso"
+        }
+    usuario.email = datos.email
+    usuario.nickname = datos.nickname
+    db.commit()
+    db.close()
+    return {
+        "ok": True,
+        "mensaje": "Perfil actualizado correctamente"
+    }
+
+# PUT/id/password
+@router.put("/usuarios/{id}/password")
+def cambiar_password(
+    id: int,
+    datos: CambiarPass
+):
+    db = sesion_local()
+    usuario = db.query(
+        Usuario
+    ).filter(
+        Usuario.id_usuario == id
+    ).first()
+    if usuario is None:
+        db.close()
+        return {
+            "ok": False,
+            "mensaje": "Usuario no encontrado"
+        }
+    if usuario.password != datos.password_actual:
+        db.close()
+        return {
+            "ok": False,
+            "mensaje": "La contraseña actual es incorrecta"
+        }
+    if datos.password_actual == datos.password_nueva:
+        db.close()
+        return {
+            "ok": False,
+            "mensaje": "La nueva contraseña debe ser distinta a la actual"
+        }
+    import re
+    password_regex = re.compile(
+        r'^(?=.*[A-Z])(?=.*[0-9]).{8,}$'
+    )
+    if not password_regex.match(
+        datos.password_nueva
+    ):
+        db.close()
+        return {
+            "ok": False,
+            "mensaje": "La nueva contraseña debe tener al menos 8 caracteres, una mayúscula y un número"
+        }
+    usuario.password = datos.password_nueva
+    db.commit()
+    db.close()
+    return {
+        "ok": True,
+        "mensaje": "Contraseña actualizada correctamente"
     }
 
 # HOME

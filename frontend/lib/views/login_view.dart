@@ -17,6 +17,12 @@ class _LoginViewState extends State<LoginView> {
   final emailController = TextEditingController();
   final passController = TextEditingController();
 
+  @override
+  void dispose() {
+    emailController.dispose();
+    passController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -72,6 +78,7 @@ class _LoginViewState extends State<LoginView> {
 
               ElevatedButton(
                 onPressed: () async {
+                  //print("Botón presionado");
                   final res = await AuthApi.login(
                     emailController.text, 
                     passController.text);
@@ -90,9 +97,11 @@ class _LoginViewState extends State<LoginView> {
                     ),
                   );
                 } else {
+                  final mensaje = res?["mensaje"]??
+                  "Error de conexión";
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text(
-                      "Correo o contraseña son incorrectos"
+                    SnackBar(content: Text(
+                      mensaje
                     ),
                     ),
                   );
