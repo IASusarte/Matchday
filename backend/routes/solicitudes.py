@@ -4,6 +4,8 @@ router = APIRouter()
 
 from bd import sesion_local
 from models.solicitud import Solicitud
+from models.usuario import Usuario
+from models.partida import Partida
 from schems.solicitud_schem import CrearSolicitud
 
 # SOLICITUDES
@@ -79,6 +81,45 @@ def obtener_solicitud(id: int):
         "id_partida": solicitud.id_partida,
         "estado": solicitud.estado
     }
+
+# GET/detalles
+@router.get("/solicitudes/detalle")
+def obtener_solicitudes_detalle():
+    db = sesion_local()
+    solicitudes = db.query(
+        Solicitud
+    ).all()
+    res = []
+    for solicitud in solicitudes:
+        usuario = db.query(
+            Usuario
+        ).filter(
+            Usuario.id_usuario ==
+            solicitud.id_usuario
+        ).first()
+
+        partida = db.query(
+            Partida
+        ).filter(
+            Partida.id_partida ==
+            solicitud.id_partida
+        ).first()
+        res.append(
+            {
+                "id_solicitud": solicitud.id_solicitud,
+                "id_usuario": solicitud.id_usuario,
+                "nickname": usuario.nickname
+                    if usuario
+                    else "",
+                "id_partida": solicitud.id_partida,
+                "lugar": partida.lugar
+                    if partida
+                    else "",
+                "estado": solicitud.estado
+            }
+        )
+    db.close()
+    return res
 
 # PUT/id
 @router.put("/solicitudes/{id}")

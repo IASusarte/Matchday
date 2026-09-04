@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import '../data/test_data.dart';
-import '../utils/reputation_utils.dart';
+//import '../utils/reputation_utils.dart';
 import '../data/session.dart';
 import '../api/api_user.dart';
 
@@ -25,59 +24,45 @@ class _PersonalDataViewState extends State<PersonalDataView>{
   final passwordConfirmarController = TextEditingController();
 
   Map<String, dynamic>? usuario;
+  Map<String, dynamic>? dashboard;
 
   Future<void> cargarUsuario() async {
-
-  final data =
-      await UserApi.obtenerUsuario(
-    Session.usuarioId!,
-  );
-  if (data == null) return;
-  setState(() {
-    usuario = data;
-    nombresController.text = data["nombres"];
-    apellidosController.text = data["apellidos"];
-    emailController.text = data["email"];
-    nicknameController.text = data["nickname"];
-    rutController.text = data["rut"];
-  });
-}
+    final data = await UserApi.obtenerUsuario(Session.usuarioId!);
+      if (data == null) return;
+      setState(() {
+        usuario = data;
+        nombresController.text = data["nombres"];
+        apellidosController.text = data["apellidos"];
+        emailController.text = data["email"];
+        nicknameController.text = data["nickname"];
+        rutController.text = data["rut"];
+      });
+  }
+  Future<void> cargarDashboard() async {
+    final data = await UserApi.obtenerDashboard(Session.usuarioId!);
+    if (data == null) return;
+    setState(() {
+      dashboard = data;
+    });
+  }
 
   @override
   void initState() {
     super.initState();
-
     cargarUsuario();
-
+    cargarDashboard();
   }
 
   @override
   Widget build(BuildContext context) {
 
-    if(usuario == null){
+    if(usuario == null || dashboard == null) {
       return const Scaffold(
         body: Center(
           child: CircularProgressIndicator(),
         ),
       );
-    }
-
-
-
-    final partidasCreadas =
-        testPartidas.where(
-          (p) => p.idCreador == Session.usuarioId,
-          ).length;
-
-    final evaluacionUsuario =
-        testEvaluaciones.where(
-          (e) => e.idEvaluado == 1,
-        ).toList();
-    final promedioCompromiso = calcularPromedio(evaluacionUsuario, (e) => e.compromiso);  
-    final promedioPuntualidad = calcularPromedio(evaluacionUsuario, (e) => e.puntualidad);  
-    final promedioFairplay = calcularPromedio(evaluacionUsuario, (e) => e.fairplay);  
-    final promedioNivelDeJuego = calcularPromedio(evaluacionUsuario, (e) => e.niveldejuego);
-    final reputacionGeneral = (promedioCompromiso + promedioPuntualidad + promedioFairplay + promedioNivelDeJuego) / 4;     
+    } 
     
     return Scaffold(
       backgroundColor: const Color(0xFF43AAE8),
@@ -411,7 +396,7 @@ class _PersonalDataViewState extends State<PersonalDataView>{
             const SizedBox(height: 30),
 
             Text(
-                  'Partidas creadas: $partidasCreadas',
+                  'Partidas creadas: ${dashboard!["partidas_creadas"]}',
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 18,
@@ -426,11 +411,16 @@ class _PersonalDataViewState extends State<PersonalDataView>{
               ),
             ),
 
-            Text('General: ${reputacionGeneral.toStringAsFixed(1)} ⭐',),
-            Text('Compromiso: ${promedioCompromiso.toStringAsFixed(1)} ⭐',),
-            Text('Puntualidad : ${promedioPuntualidad.toStringAsFixed(1)} ⭐',),
-            Text('FairPlay: ${promedioFairplay.toStringAsFixed(1)} ⭐',),
-            Text('Nivel de Juego: ${promedioNivelDeJuego.toStringAsFixed(1)} ⭐',),
+            Text('General: ${(
+              dashboard!["promedio_compromiso"] + 
+              dashboard!["promedio_puntualidad"] + 
+              dashboard!["promedio_fairplay"] + 
+              dashboard!["promedio_nivel_de_juego"]
+            ) / 4} ⭐'),
+            Text('Compromiso: ${dashboard!["promedio_compromiso"]} ⭐'),
+            Text('Puntualidad : ${dashboard!["promedio_puntualidad"]} ⭐'),
+            Text('FairPlay: ${dashboard!["promedio_fairplay"]} ⭐'),
+            Text('Nivel de Juego: ${dashboard!["promedio_nivel_de_juego"]} ⭐')
 
 
 

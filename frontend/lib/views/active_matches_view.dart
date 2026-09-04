@@ -1,18 +1,49 @@
 import 'package:flutter/material.dart';
 import 'match_detail_view.dart';
 //import '../models/partida.dart';
-//import '../data/test_data.dart';
-import '../utils/sports_utils.dart';
-import '../repos/partida_repo.dart';
+//import '../utils/sports_utils.dart';
+//import '../repos/partida_repo.dart';
+import '../api/api_match.dart';
 
-class ActiveMatchesView extends StatelessWidget {
+
+class ActiveMatchesView extends StatefulWidget {
   const ActiveMatchesView({super.key});
+
+  @override
+  State<ActiveMatchesView> createState() => _ActiveMatchesViewState();
+}
+
+class _ActiveMatchesViewState extends State<ActiveMatchesView> {
+
+    List<dynamic> partidas = [];
+
+    Future<void> cargarPartidas() async {
+      final data = await MatchApi.obtenerPartidasActivas();
+      setState(() {
+        partidas = data;
+      });
+    }
+
+
+
+    @override
+    void initState() {
+      super.initState();
+      cargarPartidas();
+    }
 
   @override
   Widget build(BuildContext context) {
 
-    final partidaRepo = PartidaRepo();
-    final partidas = partidaRepo.obtenerPartidas();
+    //final partidaRepo = PartidaRepo();
+    //final partidas = partidaRepo.obtenerPartidas();
+    if (partidas.isEmpty) {
+    return const Scaffold(
+      body: Center(
+        child: CircularProgressIndicator(),
+      ),
+    );
+    }
 
     return Scaffold(
       backgroundColor: const Color(0xFF43AAE8),
@@ -31,18 +62,18 @@ class ActiveMatchesView extends StatelessWidget {
               final partida = partidas[index];
               return Card(
                 child: ListTile(
-                  title: Text(obtenerNombreDeporte(partida.idDeporte)),
+                  title: Text('Partida #${partida["id"]}'),
                   subtitle: Text(
-                    '${partida.fecha}\n'
-                    '${partida.hora}\n'
-                    '${partida.descripcion}',
+                    '${partida["fecha"]}\n'
+                    '${partida["hora"]}\n'
+                    '${partida["lugar"]}',
                   ),
                   trailing: const Icon(Icons.arrow_forward),
                   onTap: () {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (_) => MatchDetailView(partida: partida),
+                        builder: (_) => MatchDetailView(idPartida: partida["id"]),
                       ),
                     );
                   },

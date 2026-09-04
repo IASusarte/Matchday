@@ -1,11 +1,11 @@
 //import 'dart:js_interop';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import '../models/partida.dart';
-import '../data/test_data.dart';
+//import '../models/partida.dart';
 import 'active_matches_view.dart';
 import '../data/session.dart';
-import '../repos/partida_repo.dart';
+//import '../repos/partida_repo.dart';
+import '../api/api_match.dart';
 
 class CreateMatchView extends StatefulWidget {
   const CreateMatchView({super.key});
@@ -50,7 +50,6 @@ class _CreateMatchViewState extends State<CreateMatchView> {
 
   int? deporteSeleccionado;
 
-  final PartidaRepo partidaRepo = PartidaRepo();
 
 
   @override
@@ -227,7 +226,7 @@ class _CreateMatchViewState extends State<CreateMatchView> {
             const SizedBox(height: 30),
 
             ElevatedButton(
-              onPressed: () {
+              onPressed: () async {
                 /*print('Deporte: ${deporteController.text}');
                 print('Fecha: ${fechaController.text}');
                 print('Hora: ${horaController.text}');
@@ -351,37 +350,46 @@ class _CreateMatchViewState extends State<CreateMatchView> {
                 }
 
 
-                final nuevaPartida = Partida(
-                  idCreador: usuarioLogueado!.id,
-                  id: testPartidas.length + 1,
+                final res = await MatchApi.crearPartida(
+                  idCreador: Session.usuarioId!,
                   idDeporte: deporte,
-                  fecha: DateTime.parse(
-                    fechaController.text
-                  ),
-                  hora: horaController.text,
-                  cantJugadores: 
-                      int.tryParse(cantJugadoresController.text) ?? 0,
-                    lugar: lugarController.text,
-                    descripcion: descripcionController.text,
-                    estado: "Activa",
+                  fecha: DateFormat('yyyy-MM-dd')
+                      .format(fechaSeleccionada),
+                  hora: "${horaCompleta[0]}:${horaCompleta[1]}:00",
+                  cantJugadores: cant,
+                  lugar: lugarController.text,
+                  descripcion: descripcionController.text,
+                );
+
+                if (!context.mounted) return;
+
+                if (res == null) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text(
+                        'Error al crear la partida'
+                      ),
+                    ),
                   );
-              
+                  return;
+                } 
+                
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text(
+                      'Partida creada correctamente',
+                    ),
+                  ),
+                );
 
-                  partidaRepo.crearPartida(nuevaPartida);
-              
-
-                  Navigator.push(
+                Navigator.push(
                     context,
                     MaterialPageRoute(
                       builder: (_) => const ActiveMatchesView(),
                     ),
                   );
+                
 
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Partida creada'),
-                  ),
-                );
               },
               child: const Text('Crear'),
             ),

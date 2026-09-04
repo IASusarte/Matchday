@@ -104,7 +104,7 @@ class UserApi {
   return jsonDecode(
     response.body,
   );
-}
+  }
 
   static Future<void> agregarPreferencia(
     int idUsuario,
@@ -123,5 +123,35 @@ class UserApi {
         "id_deporte": idDeporte,
       }),
     );
+  }
+  
+  static Future<List<dynamic>> obtenerHistorial(
+    int id,
+  ) async {
+
+    final response = await http.get(
+      Uri.parse(
+        '${ApiConfig.baseUrl}/usuarios/$id/historial',
+      ),
+    );
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    }
+
+    return [];
+
+  }
+
+  static Future<Map<String, dynamic>?> obtenerDashboard(
+  int id,
+  ) async {
+    final response = await http.get(
+      Uri.parse('${ApiConfig.baseUrl}/usuarios/$id/dashboard'),
+    );
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    }
+    return null;
   }
 }

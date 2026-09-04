@@ -8,7 +8,6 @@ import 'join_match_view.dart';
 import 'active_matches_view.dart';
 import 'requests_view.dart';
 import '../data/session.dart';
-import '../data/test_data.dart';
 import '../api/api_user.dart';
 
 class HomeView extends StatefulWidget {
@@ -51,8 +50,13 @@ void initState() {
 
     }
 
+    final partidasCreadas = 0;
+    final partidasJugadas = 0;
+    final solicitudesPendientes = 0;
+    final reputacion = 0.0;
 
-    final partidasCreadas = testPartidas.where(
+
+    /*final partidasCreadas = testPartidas.where(
       (p) => p.idCreador == Session.usuarioId).length;
 
     final partidasJugadas = testParticipantes.where(
@@ -77,7 +81,7 @@ void initState() {
             ) /4;
         }
         reputacion = suma / evaluaciones.length;
-      }
+      }*/
 
     
     return Scaffold(

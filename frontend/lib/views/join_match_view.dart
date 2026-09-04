@@ -1,19 +1,40 @@
 import 'package:flutter/material.dart';
-import 'package:proyecto_titulo/utils/sports_utils.dart';
-import '../data/test_data.dart';
-import '../models/solicitud.dart';
-import '../models/partida.dart';
-import '../data/session.dart';
+import '../api/api_match.dart';
+import 'match_detail_view.dart';
 
-class JoinMatchView extends StatelessWidget {
+class JoinMatchView extends StatefulWidget {
   const JoinMatchView({super.key});
 
   @override
+  State<JoinMatchView> createState() => _JoinMatchViewState();
+}
+
+class _JoinMatchViewState extends State<JoinMatchView> {
+
+  List<dynamic> partidas = [];
+
+  Future<void> cargarPartidas() async {
+    final data = await MatchApi.obtenerPartidasActivas();
+    setState(() {
+      partidas = data;
+    });
+  }
+  @override
+  void initState() {
+    super.initState();
+    cargarPartidas();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final partidasDisponibles = testPartidas.where(
-              (p) => p.idCreador != usuarioLogueado!.id &&
-                     p.estado != 'Finalizada',
-            ).toList();
+
+    if (partidas.isEmpty) {
+      return const Scaffold(
+        body: Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
             
     return Scaffold(
       backgroundColor: const Color(0xFF43AAE8),
@@ -58,108 +79,42 @@ class JoinMatchView extends StatelessWidget {
             ListView.builder(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
-              itemCount: partidasDisponibles.length,
+              itemCount: partidas.length,
               itemBuilder: (context, index) {
-                final partida = partidasDisponibles[index];
-                return partidaCard(
-                  context,
-                  partida: partida,
-                );
-              },
-            ),
-
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget partidaCard(
-    BuildContext context, {
-    required Partida partida,
-  }) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(15),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-
-            Text(
-              obtenerNombreDeporte(partida.idDeporte),
-              style: const TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-
-            Text('Lugar: ${partida.lugar}'),
-            Text('Fecha: ${partida.fecha}'),
-            Text('Hora: ${partida.hora}'),
-
-            const SizedBox(height: 10),
-
-            ElevatedButton(
-              onPressed: () {
-                final existeSolicitud = testSolicitudes.any(
-                  (s) =>
-                      s.idUsuario == usuarioLogueado!.id && 
-                      s.idPartida == partida.id,
-                );
-                if(existeSolicitud) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Ya has solicitado unirte a esta partida'),
+                final partida = partidas[index];
+                return Card(
+                  child: ListTile(
+                    title: Text(
+                      'Partida #${partida["id"]}',
                     ),
-                  );
-                  return;
-                }
-                testSolicitudes.add(
-                  Solicitud(
-                    id: testSolicitudes.length + 1,
-                    idPartida: partida.id,
-                    idUsuario: usuarioLogueado!.id,
-                    estado: 'Pendiente',
-                  )
-                );
-                showDialog(
-                  context: context,
-                  builder: (_) => AlertDialog(
-                    title: const Text('Solicitud enviada'),
-                    content: const Text(
-                      'La solicitud para unirse a la partida ha sido enviada.',
+                    subtitle: Text(
+                      'Lugar: ${partida["lugar"]}\n'
+                      'Fecha: ${partida["fecha"]}\n'
+                      'Hora: ${partida["hora"]}',
                     ),
-                    actions: [
-                      TextButton(
-                        onPressed: () {
-                          final participantesPartida = testParticipantes.where(
-                            (p) => p.idPartida == partida.id).length;
+                    trailing: const Icon(
+                      Icons.arrow_forward,
+                    ),
+                    onTap: () {
 
-                            if(participantesPartida >= 
-                              partida.cantJugadores) {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => MatchDetailView(
+                            idPartida: partida["id"],
+                          ),
+                        ),
+                      );
 
-                            ScaffoldMessenger.of(context)
-                            .showSnackBar(
-                              const SnackBar(
-                                content: Text(
-                                  'No hay cupos disponibles'),
-                              ),
-                            );
-                            return;
-                          }
-                          Navigator.pop(context);
-                        },
-                        child: const Text('Aceptar'),
-                      ),
-                    ],
+                    },
                   ),
                 );
               },
-              child: const Text('Solicitar unirse'),
             ),
+
           ],
         ),
       ),
     );
   }
-}
+  }

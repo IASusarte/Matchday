@@ -1,28 +1,65 @@
 import 'package:flutter/material.dart';
 //import 'rate_players_view.dart';
-import '../models/partida.dart';
-import '../data/test_data.dart';
-import 'player_rating_view.dart';
+//import '../models/partida.dart';
+//import 'player_rating_view.dart';
 //import '../models/participante_partida.dart';
 import '../utils/sports_utils.dart';
+import '../api/api_match.dart';
+import '../api/api_request.dart';
+import '../data/session.dart';
 
-class MatchDetailView extends StatelessWidget {
-  final Partida partida;
+class MatchDetailView extends StatefulWidget {
+  final int idPartida;
+  
 
   const MatchDetailView({
     super.key, 
-    required this.partida});
+    required this.idPartida});
+
+  @override
+  State<MatchDetailView> createState() => _MatchDetailViewState();
+  }
+
+  class _MatchDetailViewState extends State<MatchDetailView> {
+
+  Map<String, dynamic>? partida;
+
+  List<dynamic> participantes = [];
+
+  Future<void> cargarDatos() async {
+
+  final data = await MatchApi.obtenerPartida(widget.idPartida);
+  final jugadores = await MatchApi.obtenerParticipantes(widget.idPartida);
+  setState(() {
+    partida = data;
+    participantes = jugadores;
+  });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    cargarDatos();
+  }
+
 
   @override
   Widget build(BuildContext context) {
 
-    final participantesPartida = testParticipantes.where(
-      (p) => p.idPartida == partida.id).toList();
+    if (partida == null) {
+      return const Scaffold(
+        body: Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
 
-    final participantesActuales = participantesPartida.length;
-    final cuposDisponibles = partida.cantJugadores - participantesActuales;
+    final participantesActuales = participantes.length;
+
+    //final participantesActuales = participantesPartida.length;
+    final cuposDisponibles = partida!["cant_jugadores"] - participantesActuales;
     String estadoPartida;
-      if(partida.estado == 'Finalizada'){
+      if(partida!["estado"] == 'Finalizada'){
         estadoPartida = 'Finalizada';
       } else if (cuposDisponibles <= 0){
         estadoPartida = 'Completa';
@@ -32,11 +69,9 @@ class MatchDetailView extends StatelessWidget {
 
     final ocupacion = 
     (participantesActuales /
-    partida.cantJugadores) * 100;
+    partida!["cant_jugadores"]) * 100;
 
-    final organizador = testUsuarios.firstWhere(
-      (u) => u.id == partida.idCreador,
-    );
+    Text('Organizador: ${partida!["id_creador"]}');
 
 
     return Scaffold(
@@ -57,7 +92,7 @@ class MatchDetailView extends StatelessWidget {
         children: [
 
           Text(
-            obtenerNombreDeporte(partida.idDeporte),
+            obtenerNombreDeporte(partida!["id_deporte"]),
             style: TextStyle(
               fontSize: 30,
               fontWeight: FontWeight.bold,
@@ -66,14 +101,47 @@ class MatchDetailView extends StatelessWidget {
 
           const SizedBox(height: 20),
 
-          Text('Fecha: ${partida.fecha.toString()}'),
-          Text('Hora: ${partida.hora}'),
-          Text('Lugar: ${partida.lugar}'),
-          Text('Organizador: ${organizador.nickname}'),
-          Text('Jugadores requeridos: ${partida.cantJugadores}'),
+          Text('Fecha: ${partida!["fecha"].toString()}'),
+          Text('Hora: ${partida!["hora"].toString()}'),
+          Text('Lugar: ${partida!["lugar"].toString()}'),
+          Text('Organizador: ${partida!["id_creador"]}'),
+          Text('Jugadores requeridos: ${partida!["cant_jugadores"].toString()}'),
+          Text('Descripción: ${partida!["descripcion"].toString()}'),
           Text('Participantes actuales: $participantesActuales',),
           Text('Cupos disponibles: $cuposDisponibles',),
           Text('Ocupación: ${ocupacion.toStringAsFixed(0)}%',),
+
+          ElevatedButton(
+            onPressed: () async {
+              final res = await RequestApi.crearSolicitud(
+                idUsuario: Session.usuarioId!,
+                idPartida: widget.idPartida,
+              );
+              if (!context.mounted) return;
+              if (res?["ok"] == false) {
+                ScaffoldMessenger.of(context)
+                    .showSnackBar(
+                  const SnackBar(
+                    content: Text(
+                      'Ya existe una solicitud para esta partida',
+                    ),
+                  ),
+                );
+                return;
+              }
+              ScaffoldMessenger.of(context)
+                  .showSnackBar(
+                const SnackBar(
+                  content: Text(
+                    'Solicitud enviada correctamente',
+                  ),
+                ),
+              );
+            },
+            child: const Text(
+              'Solicitar participación',
+            ),
+          ),
           const SizedBox(height: 10),
 
           Container(
@@ -123,17 +191,18 @@ class MatchDetailView extends StatelessWidget {
           ),
 
 
-            ...participantesPartida.map(
-                  (participante) {
-                    final usuario = testUsuarios.firstWhere(
-                      (u) => u.id == participante.idUsuario
-                    );
-                   return ListTile(
-                    leading: const Icon(Icons.person),
-                    title: Text(
-                      usuario.nickname,
+          ...participantes.map(
+            (participante) {
+
+              return ListTile(
+                leading: const Icon(
+                  Icons.person,
+                ),
+                title: Text(
+                  'Usuario ${participante["id_usuario"]}',
                 ),
               );
+
             },
           ),
 
@@ -151,7 +220,7 @@ class MatchDetailView extends StatelessWidget {
                 
                 onPressed: () {
 
-                  if(participantesPartida.isEmpty){
+                  if(participantes.isEmpty){
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
                         content: Text(
@@ -174,7 +243,16 @@ class MatchDetailView extends StatelessWidget {
                       actions: [
                         TextButton(
                           onPressed: () {
-                            partida.estado = 'Finalizada';
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text(
+                                  'Sistema de evaluación en proceso de integración',
+                                ),
+                              ),
+                            );
+                          },
+                          /*onPressed: () {
+                            //partida.estado = 'Finalizada';
 
                             Navigator.pop(context);
 
@@ -186,7 +264,7 @@ class MatchDetailView extends StatelessWidget {
                                 ),
                               );
                             
-                          } ,
+                          } ,*/
                           child: const Text('Finalizar'),
                         )
                       ],

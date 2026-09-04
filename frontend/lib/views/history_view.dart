@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import '../data/test_data.dart';
 import '../data/session.dart';
-import '../utils/sports_utils.dart';
+//import '../utils/sports_utils.dart';
+import '../api/api_user.dart';
 
 class HistoryView extends StatefulWidget {
   const HistoryView({super.key});
@@ -12,25 +12,31 @@ class HistoryView extends StatefulWidget {
 
 class _HistoryViewState extends State<HistoryView>{
 
+  List<dynamic> historial = [];
+
+  Future<void> cargarHistorial() async {
+    final data = await UserApi.obtenerHistorial(Session.usuarioId!);
+    setState(() {
+      historial = data;
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    cargarHistorial();
+  }
 
   @override
   Widget build(BuildContext context) {
+    if (historial.isEmpty) {
+      return const Scaffold(
+        body: Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
 
-    final misParticipaciones = testParticipantes.where(
-      (p) => p.idUsuario == usuarioLogueado?.id,
-    ).toList();
-
-    final misPartidas = 
-      testPartidas.where(
-        (partida) => 
-          misParticipaciones.any(
-            (participacion) => 
-              participacion.idPartida == 
-              partida.id,
-          ),
-    ).toList();
-
-    misPartidas.sort((a, b) => b.fecha.compareTo(a.fecha));
 
     return Scaffold(
       backgroundColor: const Color(0xFF43AAE8),
@@ -48,20 +54,9 @@ class _HistoryViewState extends State<HistoryView>{
         ),
         centerTitle: true,
 
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 15),
-            child: ElevatedButton(
-              onPressed: () {
-                Navigator.pop(context);
-              },
-              child: const Text('Volver'),
-            ),
-          ),
-        ],
       ),
 
-      body: misPartidas.isEmpty
+      body: historial.isEmpty
             ? const Center(
               child: Text(
                 'No posee ninguna partida registrada',
@@ -73,18 +68,10 @@ class _HistoryViewState extends State<HistoryView>{
               ),
             )
           : ListView.builder(
-              itemCount: misPartidas.length,
+              itemCount: historial.length,
               itemBuilder: (context, index) {
 
-                final partida = misPartidas[index];
-
-                final organizador = testUsuarios.firstWhere(
-                  (u) => u.id == partida.idCreador
-                );
-
-                final cantParticipantes = testParticipantes.where(
-                  (p) => p.idPartida == partida.id
-                ).length;
+                final partida = historial[index];
 
                 Color colorEstado;
                 switch (partida.estado){
@@ -105,18 +92,16 @@ class _HistoryViewState extends State<HistoryView>{
                   color: colorEstado.withValues(alpha: 0.15),
                   margin: const EdgeInsets.all(10),
                   child: ListTile(
-                    title: Text(
-                      obtenerNombreDeporte(partida.idDeporte),
-                    ),
+                    title: Text('Partida #${partida["id"]}'),
                     subtitle: Text(
-                       'Estado: ${partida.estado}\n'
-                       'Organizador: ${organizador.nickname}\n'
-                       'Participantes: '
-                       '$cantParticipantes/${partida.cantJugadores}''\n'
-                       'Lugar: ${partida.lugar}\n'
-                       'Fecha: ${partida.fecha}\n'
-                       'Hora: ${partida.hora}\n'
-                       'Descripción: ${partida.descripcion}\n',
+                       'Estado: ${partida["estado"]}\n'
+                       //'Organizador: ${organizador.nickname}\n'
+                       //'Participantes: '
+                       //'$cantParticipantes/${partida.cantJugadores}''\n'
+                       //'Lugar: ${partida.lugar}\n'
+                       'Fecha: ${partida["fecha"]}\n'
+                       //'Hora: ${partida.hora}\n'
+                       //'Descripción: ${partida.descripcion}\n',
                     ),
                   ),
                 );

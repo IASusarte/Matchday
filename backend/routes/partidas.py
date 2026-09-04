@@ -357,17 +357,17 @@ def aceptar_solicitud(
             "mensaje": "La solicitud no pertenece a esta partida"
         }
     solicitud.estado = "Aceptada"
+    partida = db.query(
+        Partida
+    ).filter(
+        Partida.id_partida == id
+    ).first()
     if partida is None:
         db.close()
         return {
             "ok": False,
             "mensaje": "Partida no encontrada"
         }
-    partida = db.query(
-        Partida
-    ).filter(
-        Partida.id_partida == id
-    ).first()
     participantes_actuales = db.query(
         Participante
     ).filter(
@@ -437,7 +437,7 @@ def rechazar_solicitud(
         "mensaje": "Solicitud rechazada"
     }
 
-# GET/partidas/id/
+# GET/id/solicitudes
 @router.get("/partidas/{id}/solicitudes")
 def obtener_solicitudes_partida(id: int):
     db = sesion_local()
@@ -458,7 +458,7 @@ def obtener_solicitudes_partida(id: int):
     db.close()
     return res
 
-# GET/partidas/id/detalle
+# GET/id/solicitudes/detalle
 @router.get("/partidas/{id}/solicitudes/detalle")
 def obtener_detalle_solicitudes(id: int):
     db = sesion_local()
@@ -483,6 +483,34 @@ def obtener_detalle_solicitudes(id: int):
                     "nickname": usuario.nickname,
                     "email": usuario.email,
                     "estado": solicitud.estado
+                }
+            )
+    db.close()
+    return res
+
+# GET/id/participantes/detalle
+@router.get("/partidas/{id}/participantes/detalle")
+def obtener_participantes_detalle(id: int):
+    db = sesion_local()
+    participantes = db.query(
+        Participante
+    ).filter(
+        Participante.id_partida == id
+    ).all()
+    res = []
+    for participante in participantes:
+        usuario = db.query(
+            Usuario
+        ).filter(
+            Usuario.id_usuario ==
+            participante.id_usuario
+        ).first()
+        if usuario:
+            res.append(
+                {
+                    "id_usuario": usuario.id_usuario,
+                    "nickname": usuario.nickname,
+                    "email": usuario.email
                 }
             )
     db.close()

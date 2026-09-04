@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import '../data/test_data.dart';
 //import '../models/solicitud.dart';
-import '../models/participante_partida.dart';
+//import '../models/participante_partida.dart';
+import '../api/api_request.dart';
 
 class RequestsView extends StatefulWidget {
   const RequestsView({super.key});
@@ -11,13 +11,27 @@ class RequestsView extends StatefulWidget {
 }
 
 class _RequestsViewState extends State<RequestsView> {
+
+  List<dynamic> solicitudes = [];
+
+  Future<void> cargarSolicitudes() async {
+    final data = await RequestApi.obtenerSolicitudesDetalle();
+    setState(() {
+      solicitudes = data.where(
+        (s) => s["estado"] == "Pendiente",
+      ).toList();
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    cargarSolicitudes();
+  }
+
   @override
   Widget build(BuildContext context) {
 
-    final solicitudesPendientes = 
-          testSolicitudes.where(
-            (s) => s.estado == 'Pendiente',
-            ).toList();
 
     return Scaffold(
       backgroundColor: const Color(0xFF43AAE8),
@@ -33,7 +47,7 @@ class _RequestsViewState extends State<RequestsView> {
     Padding(
       padding: const EdgeInsets.all(20),
       child: Text(
-        'Solicitudes pendientes: ${solicitudesPendientes.length}',
+        'Solicitudes pendientes: ${solicitudes.length}',
         style: const TextStyle(
           color: Colors.white,
           fontSize: 24,
@@ -45,18 +59,10 @@ class _RequestsViewState extends State<RequestsView> {
     Expanded(
       child: ListView.builder(
         padding: const EdgeInsets.all(20),
-        itemCount: solicitudesPendientes.length,
+        itemCount: solicitudes.length,
         itemBuilder: (context, index) {
 
-          final solicitud = solicitudesPendientes[index];
-
-          final usuario = testUsuarios.firstWhere(
-            (u) => u.id == solicitud.idUsuario,
-          );
-
-          final partida = testPartidas.firstWhere(
-            (p) => p.id == solicitud.idPartida,
-          );
+          final solicitud = solicitudes[index];
 
           return Card(
             child: Padding(
@@ -66,7 +72,7 @@ class _RequestsViewState extends State<RequestsView> {
                 children: [
 
                   Text(
-                    usuario.nickname,
+                    solicitud["nickname"],
                     style: const TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
@@ -75,9 +81,9 @@ class _RequestsViewState extends State<RequestsView> {
 
                   const SizedBox(height: 8),
 
-                  Text('Partida: ${partida.id}'),
-                  Text('Lugar: ${partida.lugar}'),
-                  Text('Estado: ${solicitud.estado}'),
+                  Text('Partida: ${solicitud["id_partida"]}'),
+                  Text('Lugar: ${solicitud["lugar"]}'),
+                  Text('Estado: ${solicitud["estado"]}'),
 
                   const SizedBox(height: 8),
 
@@ -87,33 +93,26 @@ class _RequestsViewState extends State<RequestsView> {
                     children: [
 
                       ElevatedButton(
-                        onPressed: () {
-
-                          final existe =
-                              testParticipantes.any(
-                            (p) =>
-                                p.idUsuario ==
-                                    solicitud.idUsuario &&
-                                p.idPartida ==
-                                    solicitud.idPartida,
+                        onPressed: () async {
+                          final res = await RequestApi.aceptarSolicitud(
+                            solicitud["id_partida"],
+                            solicitud["id_solicitud"],
                           );
-
-                          if (existe) {
+                          if (!context.mounted) return;
+                          if (res?["ok"] == false) {
+                            ScaffoldMessenger.of(context)
+                                .showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  res?["mensaje"] ??
+                                  "No fue posible aceptar la solicitud",
+                                ),
+                              ),
+                            );
                             return;
                           }
-
-                          testParticipantes.add(
-                            ParticipantePartida(
-                              id: testParticipantes.length + 1,
-                              idUsuario: solicitud.idUsuario,
-                              idPartida: solicitud.idPartida,
-                            ),
-                          );
-
-                          setState(() {
-                            solicitud.estado = 'Aceptada';
-                          });
-
+                          await cargarSolicitudes();
+                          if (!context.mounted) return;
                           ScaffoldMessenger.of(context)
                               .showSnackBar(
                             const SnackBar(
@@ -123,16 +122,33 @@ class _RequestsViewState extends State<RequestsView> {
                             ),
                           );
                         },
-                        child: const Text('Aceptar'),
+                        child: const Text(
+                          'Aceptar',
+                        ),
                       ),
 
                       ElevatedButton(
-                        onPressed: () {
+                        onPressed: () async {
+                          final res = await RequestApi.rechazarSolicitud(
+                            solicitud["id_partida"],
+                            solicitud["id_solicitud"],
+                          );
+                          if (!context.mounted) return;
+                          if (res?["ok"] == false) {
+                            ScaffoldMessenger.of(context)
+                                .showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  res?["mensaje"] ??
+                                  "No fue posible rechazar la solicitud",
+                                ),
+                              ),
+                            );
+                            return;
+                          }
 
-                          setState(() {
-                            solicitud.estado = 'Rechazada';
-                          });
-
+                          await cargarSolicitudes();
+                          if (!context.mounted) return;
                           ScaffoldMessenger.of(context)
                               .showSnackBar(
                             const SnackBar(

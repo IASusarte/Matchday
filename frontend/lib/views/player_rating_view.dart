@@ -1,23 +1,49 @@
 import 'package:flutter/material.dart';
-import '../data/test_data.dart';
-import '../models/partida.dart';
+//import '../models/partida.dart';
 import 'rate_players_view.dart';
+import '../api/api_match.dart';
 
-class PlayerRatingView extends StatelessWidget {
-  final Partida partida;
-  final int idUsuario;
+class PlayerRatingView extends StatefulWidget {
+  final int idPartida;
 
   const PlayerRatingView({
     super.key, 
-    required this.partida,
-    required this.idUsuario,
+    required this.idPartida,
   });
 
   @override
-  Widget build(BuildContext context) {
+  State<PlayerRatingView> createState() =>
+      _PlayerRatingViewState();
+  }
 
-    final participantes = testParticipantes.where(
-      (p) => p.idPartida == partida.id).toList();
+  class _PlayerRatingViewState
+      extends State<PlayerRatingView> {
+
+        List<dynamic> participantes = [];
+
+        Future<void> cargarParticipantes() async {
+          final data = await MatchApi.obtenerParticipantesDetalle(widget.idPartida);
+          setState(() {
+            participantes = data;
+          });
+        }
+
+  @override
+  void initState() {
+    super.initState();
+    cargarParticipantes();
+  }
+
+  
+  @override
+  Widget build(BuildContext context) {
+    if (participantes.isEmpty) {
+      return const Scaffold(
+        body: Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
 
     return Scaffold(
       backgroundColor: const Color(0xFF43AAE8),
@@ -29,18 +55,15 @@ class PlayerRatingView extends StatelessWidget {
         itemCount: participantes.length,
         itemBuilder: (context, index) {
           final participante = participantes[index];
-          final usuario = testUsuarios.firstWhere(
-            (u) => u.id == participante.idUsuario
-          );
           return Card(
             child: ListTile(
-              title: Text(usuario.nickname),
+              title: Text(participante["nickname"]),
               trailing: ElevatedButton(
                 onPressed: () {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => RatePlayersView(idUsuario: participante.idUsuario),
+                      builder: (context) => RatePlayersView(idUsuario: participante["id_usuario"], idPartida: widget.idPartida),
                     ),
                   );
                 },

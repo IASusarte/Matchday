@@ -1,29 +1,55 @@
 import 'package:flutter/material.dart';
 import 'home_view.dart';
-import '../models/evaluacion.dart';
-import '../data/test_data.dart';
+//import '../models/evaluacion.dart';
+import '../api/api_user.dart';
+import '../api/api_evaluation.dart';
+import '../data/session.dart';
 
 class RatePlayersView extends StatefulWidget {
 
   final int idUsuario;
-  const RatePlayersView({super.key, required this.idUsuario});
+  final int idPartida;
+  const RatePlayersView({super.key, required this.idUsuario, required this.idPartida});
 
   @override
   State<RatePlayersView> createState() => _RatePlayersViewState();
 }
 
 class _RatePlayersViewState extends State<RatePlayersView> {
+
+  Map<String, dynamic>? usuario;
+
+  Future<void> cargarUsuario() async {
+
+    final data = await UserApi.obtenerUsuario(widget.idUsuario);
+    if (data == null) return;
+    setState(() {
+      usuario = data;
+    });
+  }
+
+
   double compromiso = 0;
   double puntualidad = 0;
   double fairplay = 0;
   double nivelJuego = 0;
 
   @override
+  void initState() {
+    super.initState();
+    cargarUsuario();
+  }
+
+  @override
   Widget build(BuildContext context) {
 
-    final usuario = testUsuarios.firstWhere(
-      (u) => u.id == widget.idUsuario
-    );
+    if (usuario == null) {
+      return const Scaffold(
+        body: Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
 
     return Scaffold(
       backgroundColor: const Color(0xFF43AAE8),
@@ -54,7 +80,7 @@ class _RatePlayersViewState extends State<RatePlayersView> {
             const SizedBox(height: 15),
 
             Text(
-              usuario.nickname,
+              usuario!["nickname"],
               style: TextStyle(
                 color: Colors.white,
                 fontSize: 28,
@@ -117,37 +143,48 @@ class _RatePlayersViewState extends State<RatePlayersView> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF5850EC),
                 ),
-                onPressed: () {
-                  testEvaluaciones.add(
-                    Evaluacion(
-                      id: testEvaluaciones.length + 1,
-                      idPartida: 1,
-                      idEvaluador: 1,
-                      idEvaluado: widget.idUsuario,
-                      compromiso: compromiso.toInt(),
-                      puntualidad: puntualidad.toInt(),
-                      fairplay: fairplay.toInt(),
-                      niveldejuego: nivelJuego.toInt(),
-                  ));
+                onPressed: () async {
+                  final res = await EvaluationApi.crearEvaluacion(
+                    idPartida: 1,
+                    idEvaluador: Session.usuarioId!,
+                    idEvaluado: widget.idUsuario,
+                    compromiso: compromiso.toInt(),
+                    puntualidad: puntualidad.toInt(),
+                    fairplay: fairplay.toInt(),
+                    nivelJuego: nivelJuego.toInt()
+                  );
+                  if (!context.mounted) return;
+                  if (res?["ok"] == false) {
+                    ScaffoldMessenger.of(context)
+                        .showSnackBar(
+                      const SnackBar(
+                        content: Text(
+                          'No fue posible guardar la evaluación'
+                        ),
+                      ),
+                    );
+                    return;
+                  }
                   showDialog(
                     context: context,
                     builder: (_) => AlertDialog(
                       title: const Text('Evaluación enviada'),
-                      content: const Text(
-                        'La evaluación fue registrada correctamente.',
-                      ),
+                      content: const Text('La evaluación fue registrada correctamente.'),
                       actions: [
                         TextButton(
                           onPressed: () {
                             Navigator.pushAndRemoveUntil(
                               context,
                               MaterialPageRoute(
-                                builder: (_) => const HomeView(),
+                                builder: (_) =>
+                                    const HomeView(),
                               ),
                               (route) => false,
                             );
                           },
-                          child: const Text('Aceptar'),
+                          child: const Text(
+                            'Aceptar',
+                          ),
                         ),
                       ],
                     ),
@@ -162,7 +199,6 @@ class _RatePlayersViewState extends State<RatePlayersView> {
                 ),
               ),
             ),
-
             const SizedBox(height: 20),
           ],
         ),
