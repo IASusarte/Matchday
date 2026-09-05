@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-//import '../models/partida.dart';
 import 'rate_players_view.dart';
 import '../api/api_match.dart';
+import '../data/session.dart';
 
 class PlayerRatingView extends StatefulWidget {
   final int idPartida;
@@ -20,12 +20,18 @@ class PlayerRatingView extends StatefulWidget {
       extends State<PlayerRatingView> {
 
         List<dynamic> participantes = [];
+        bool cargando = true;
 
         Future<void> cargarParticipantes() async {
           final data = await MatchApi.obtenerParticipantesDetalle(widget.idPartida);
-          setState(() {
-            participantes = data;
-          });
+            setState(() {
+              participantes = data.where(
+                (p) =>
+                    p["id_usuario"] !=
+                    Session.usuarioId,
+              ).toList();
+              cargando = false;
+            });
         }
 
   @override
@@ -37,12 +43,27 @@ class PlayerRatingView extends StatefulWidget {
   
   @override
   Widget build(BuildContext context) {
-    if (participantes.isEmpty) {
+    if (cargando) {
       return const Scaffold(
         body: Center(
           child: CircularProgressIndicator(),
         ),
       );
+    }
+    if (participantes.isEmpty) {
+      return Scaffold(
+        appBar: AppBar(
+          title: const Text(
+            'Seleccionar jugador',
+          ),
+        ),
+        body: const Center(
+          child: Text(
+            'No existen jugadores para evaluar',
+          ),
+        ),
+      );
+
     }
 
     return Scaffold(

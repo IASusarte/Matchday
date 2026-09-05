@@ -1,8 +1,5 @@
 import 'package:flutter/material.dart';
 import 'match_detail_view.dart';
-//import '../models/partida.dart';
-//import '../utils/sports_utils.dart';
-//import '../repos/partida_repo.dart';
 import '../api/api_match.dart';
 
 
@@ -16,11 +13,13 @@ class ActiveMatchesView extends StatefulWidget {
 class _ActiveMatchesViewState extends State<ActiveMatchesView> {
 
     List<dynamic> partidas = [];
+    bool cargando = true;
 
     Future<void> cargarPartidas() async {
-      final data = await MatchApi.obtenerPartidasActivas();
+      final data = await MatchApi.obtenerPartidas();
       setState(() {
         partidas = data;
+        cargando = false;
       });
     }
 
@@ -35,9 +34,7 @@ class _ActiveMatchesViewState extends State<ActiveMatchesView> {
   @override
   Widget build(BuildContext context) {
 
-    //final partidaRepo = PartidaRepo();
-    //final partidas = partidaRepo.obtenerPartidas();
-    if (partidas.isEmpty) {
+    if (cargando) {
     return const Scaffold(
       body: Center(
         child: CircularProgressIndicator(),

@@ -84,4 +84,33 @@ static Future<Map<String, dynamic>?> obtenerPartida(
     }
     return [];
   }
+
+  static Future<Map<String, dynamic>?>
+      finalizarPartida(
+    int idPartida,
+  ) async {
+    final response = await http.post(
+      Uri.parse('${ApiConfig.baseUrl}/partidas/$idPartida/finalizar'),
+    );
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    }
+    return null;
+  }
+
+  static Future<List<dynamic>>
+      obtenerPartidas() async {
+
+    final response = await http.get(
+      Uri.parse(
+        '${ApiConfig.baseUrl}/partidas',
+      ),
+    );
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    }
+
+    return [];
+  }
 }

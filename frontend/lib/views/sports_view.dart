@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:proyecto_titulo/api/api_sports.dart';
-//import 'login_view.dart';
+import 'login_view.dart';
 import '../api/api_user.dart';
 import '../data/session.dart';
 import '../data/data_temp.dart';
-import 'home_view.dart';
+//import 'home_view.dart';
 
 class SportsView extends StatefulWidget {
   const SportsView({super.key});
@@ -108,11 +108,20 @@ class _SportsViewState extends State<SportsView> {
   Session.usuarioId = idUsuario;
 
   if (!mounted) return;
+  if (!context.mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text(
+          'Registro exitoso. Inicie sesión.',
+        ),
+      ),
+    );
 
   Navigator.pushAndRemoveUntil(
     context,
     MaterialPageRoute(
-      builder: (_) => const HomeView(),
+      builder: (_) => const LoginView(),
     ),
     (route) => false,
   );
@@ -230,7 +239,9 @@ class _SportsViewState extends State<SportsView> {
 
             ElevatedButton(
               onPressed: finalizarRegistro,
+              
               child: const Text('Registrar'),
+              
             ),
 
             const SizedBox(height: 40),

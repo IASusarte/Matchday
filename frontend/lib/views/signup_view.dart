@@ -351,16 +351,13 @@ class RegisterView extends StatefulWidget {
 
                   return;
                 }
-
-
-              
-
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const SportsView(),
-                  ),
-                );
+                
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const SportsView(),
+                ),
+              );
               },
               child: const Text('Siguiente'),
             )

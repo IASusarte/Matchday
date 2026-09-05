@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-//import '../models/solicitud.dart';
-//import '../models/participante_partida.dart';
 import '../api/api_request.dart';
+
+import '../data/session.dart';
 
 class RequestsView extends StatefulWidget {
   const RequestsView({super.key});
@@ -15,7 +15,7 @@ class _RequestsViewState extends State<RequestsView> {
   List<dynamic> solicitudes = [];
 
   Future<void> cargarSolicitudes() async {
-    final data = await RequestApi.obtenerSolicitudesDetalle();
+    final data = await RequestApi.obtenerSolicitudesRecibidas(Session.usuarioId!);
     setState(() {
       solicitudes = data.where(
         (s) => s["estado"] == "Pendiente",

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'home_view.dart';
-//import '../models/evaluacion.dart';
 import '../api/api_user.dart';
 import '../api/api_evaluation.dart';
 import '../data/session.dart';
@@ -144,8 +143,25 @@ class _RatePlayersViewState extends State<RatePlayersView> {
                   backgroundColor: const Color(0xFF5850EC),
                 ),
                 onPressed: () async {
+                  if (
+                    compromiso == 0 ||
+                    puntualidad == 0 ||
+                    fairplay == 0 ||
+                    nivelJuego == 0
+                  ) {
+
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text(
+                          'Debe evaluar todos los criterios',
+                        ),
+                      ),
+                    );
+
+                    return;
+                  }
                   final res = await EvaluationApi.crearEvaluacion(
-                    idPartida: 1,
+                    idPartida: widget.idPartida,
                     idEvaluador: Session.usuarioId!,
                     idEvaluado: widget.idUsuario,
                     compromiso: compromiso.toInt(),

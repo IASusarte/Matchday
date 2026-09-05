@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-//import '../utils/reputation_utils.dart';
 import '../data/session.dart';
 import '../api/api_user.dart';
 
@@ -45,6 +44,7 @@ class _PersonalDataViewState extends State<PersonalDataView>{
       dashboard = data;
     });
   }
+  
 
   @override
   void initState() {
@@ -52,9 +52,11 @@ class _PersonalDataViewState extends State<PersonalDataView>{
     cargarUsuario();
     cargarDashboard();
   }
+  
 
   @override
   Widget build(BuildContext context) {
+
 
     if(usuario == null || dashboard == null) {
       return const Scaffold(
@@ -63,6 +65,16 @@ class _PersonalDataViewState extends State<PersonalDataView>{
         ),
       );
     } 
+
+    final compromiso = (dashboard!["promedio_compromiso"] ?? 0).toDouble();
+    final puntualidad = (dashboard!["promedio_puntualidad"] ?? 0).toDouble();
+    final fairplay = (dashboard!["promedio_fairplay"] ?? 0).toDouble();
+    final nivelJuego = (dashboard!["promedio_nivel_juego"] ?? 0).toDouble();
+    final reputacionGeneral =
+                (compromiso +
+                puntualidad +
+                fairplay +
+                nivelJuego) / 4;
     
     return Scaffold(
       backgroundColor: const Color(0xFF43AAE8),
@@ -88,6 +100,8 @@ class _PersonalDataViewState extends State<PersonalDataView>{
             ),
 
             const SizedBox(height: 30),
+
+            
 
             _campo('Nombres', valor: usuario?["nombres"] ?? ''),
             _campo('Apellidos', valor: usuario?["apellidos"] ?? ''),
@@ -411,18 +425,13 @@ class _PersonalDataViewState extends State<PersonalDataView>{
               ),
             ),
 
-            Text('General: ${(
-              dashboard!["promedio_compromiso"] + 
-              dashboard!["promedio_puntualidad"] + 
-              dashboard!["promedio_fairplay"] + 
-              dashboard!["promedio_nivel_de_juego"]
-            ) / 4} ⭐'),
-            Text('Compromiso: ${dashboard!["promedio_compromiso"]} ⭐'),
-            Text('Puntualidad : ${dashboard!["promedio_puntualidad"]} ⭐'),
-            Text('FairPlay: ${dashboard!["promedio_fairplay"]} ⭐'),
-            Text('Nivel de Juego: ${dashboard!["promedio_nivel_de_juego"]} ⭐')
 
 
+            Text('General: ${reputacionGeneral.toStringAsFixed(1)} ⭐'),
+            Text('Compromiso: $compromiso ⭐'),
+            Text('Puntualidad : $puntualidad ⭐'),
+            Text('FairPlay: $fairplay ⭐'),
+            Text('Nivel de Juego: $nivelJuego ⭐')
 
           ],
         ),

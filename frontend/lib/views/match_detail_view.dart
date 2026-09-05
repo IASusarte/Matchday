@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 //import 'rate_players_view.dart';
-//import '../models/partida.dart';
-//import 'player_rating_view.dart';
-//import '../models/participante_partida.dart';
+import 'player_rating_view.dart';
 import '../utils/sports_utils.dart';
 import '../api/api_match.dart';
 import '../api/api_request.dart';
@@ -29,7 +27,7 @@ class MatchDetailView extends StatefulWidget {
   Future<void> cargarDatos() async {
 
   final data = await MatchApi.obtenerPartida(widget.idPartida);
-  final jugadores = await MatchApi.obtenerParticipantes(widget.idPartida);
+  final jugadores = await MatchApi.obtenerParticipantesDetalle(widget.idPartida);
   setState(() {
     partida = data;
     participantes = jugadores;
@@ -58,6 +56,8 @@ class MatchDetailView extends StatefulWidget {
 
     //final participantesActuales = participantesPartida.length;
     final cuposDisponibles = partida!["cant_jugadores"] - participantesActuales;
+    final esOrganizador =
+      partida!["id_creador"] == Session.usuarioId;
     String estadoPartida;
       if(partida!["estado"] == 'Finalizada'){
         estadoPartida = 'Finalizada';
@@ -104,44 +104,63 @@ class MatchDetailView extends StatefulWidget {
           Text('Fecha: ${partida!["fecha"].toString()}'),
           Text('Hora: ${partida!["hora"].toString()}'),
           Text('Lugar: ${partida!["lugar"].toString()}'),
-          Text('Organizador: ${partida!["id_creador"]}'),
+          Text('Organizador: ${partida!["organizador"].toString()}'),
           Text('Jugadores requeridos: ${partida!["cant_jugadores"].toString()}'),
           Text('Descripción: ${partida!["descripcion"].toString()}'),
-          Text('Participantes actuales: $participantesActuales',),
-          Text('Cupos disponibles: $cuposDisponibles',),
-          Text('Ocupación: ${ocupacion.toStringAsFixed(0)}%',),
+          Text('Participantes actuales: $participantesActuales'),
+          Text('Cupos disponibles: $cuposDisponibles'),
+          Text('Ocupación: ${ocupacion.toStringAsFixed(0)}%'),
 
-          ElevatedButton(
-            onPressed: () async {
-              final res = await RequestApi.crearSolicitud(
-                idUsuario: Session.usuarioId!,
-                idPartida: widget.idPartida,
-              );
-              if (!context.mounted) return;
-              if (res?["ok"] == false) {
+          if (esOrganizador)
+            const Text(
+              'Eres el organizador de esta partida',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+              ),
+            )
+          else if (cuposDisponibles <= 0)
+            const Text(
+              'Partida completa',
+              style: TextStyle(
+                color: Colors.red,
+                fontWeight: FontWeight.bold,
+              ),
+            )
+          else
+            ElevatedButton(
+              onPressed: () async {
+                final res =
+                    await RequestApi.crearSolicitud(
+                  idUsuario:
+                      Session.usuarioId!,
+                  idPartida:
+                      widget.idPartida,
+                );
+                if (!context.mounted) return;
+                if (res?["ok"] == false) {
+                  ScaffoldMessenger.of(context)
+                      .showSnackBar(
+                    const SnackBar(
+                      content: Text(
+                        'Ya existe una solicitud para esta partida',
+                      ),
+                    ),
+                  );
+                  return;
+                }
                 ScaffoldMessenger.of(context)
                     .showSnackBar(
                   const SnackBar(
                     content: Text(
-                      'Ya existe una solicitud para esta partida',
+                      'Solicitud enviada correctamente',
                     ),
                   ),
                 );
-                return;
-              }
-              ScaffoldMessenger.of(context)
-                  .showSnackBar(
-                const SnackBar(
-                  content: Text(
-                    'Solicitud enviada correctamente',
-                  ),
-                ),
-              );
-            },
-            child: const Text(
-              'Solicitar participación',
+              },
+              child: const Text(
+                'Solicitar participación',
+              ),
             ),
-          ),
           const SizedBox(height: 10),
 
           Container(
@@ -166,27 +185,17 @@ class MatchDetailView extends StatefulWidget {
               ),
             ),
           ),
-          Text('Estado de la partida: $estadoPartida'),
 
           const SizedBox(height: 20),
 
-          const Text(
-            'Descripción:',
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-
-          const Text(
-            'Partido amistoso recreativo.',
-          ),
 
           const SizedBox(height: 20),
                 const Text(
                   'Participantes',
                   style: TextStyle(
-                    color: Colors.white,
+                    color: Colors.black,
                     fontSize: 18,
+                    fontWeight: FontWeight.bold
             ),
           ),
 
@@ -199,7 +208,7 @@ class MatchDetailView extends StatefulWidget {
                   Icons.person,
                 ),
                 title: Text(
-                  'Usuario ${participante["id_usuario"]}',
+                  participante["nickname"]
                 ),
               );
 
@@ -207,6 +216,8 @@ class MatchDetailView extends StatefulWidget {
           ),
 
           const Spacer(),
+
+          if (esOrganizador)
 
           Center(
             child: SizedBox(
@@ -230,6 +241,7 @@ class MatchDetailView extends StatefulWidget {
                     );
                   }
 
+
                   showDialog(
                     context: context, 
                     builder: (context) => AlertDialog(
@@ -237,40 +249,44 @@ class MatchDetailView extends StatefulWidget {
                         'Finalizar Partida'
                       ),
                       content: const Text(
-                        '¿Estás seguro que quieres finalizar la partida'
+                        '¿Estás seguro que quieres finalizar la partida? '
                         'Podrás evaluar a los participantes inmediatamente.'
                       ),
                       actions: [
                         TextButton(
-                          onPressed: () {
-                            ScaffoldMessenger.of(context).showSnackBar(
+                          onPressed: () async {
+
+                            final res = await MatchApi.finalizarPartida(widget.idPartida,);
+                            if (!context.mounted) return;
+                            if (res?["ok"] == false) {
+                              ScaffoldMessenger.of(context)
+                                  .showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    res?["mensaje"] ??
+                                    "No fue posible finalizar la partida",
+                                  ),
+                                ),
+                              );
+                              return;
+                            }
+                            Navigator.pop(context);
+                            ScaffoldMessenger.of(context)
+                                .showSnackBar(
                               const SnackBar(
                                 content: Text(
-                                  'Sistema de evaluación en proceso de integración',
+                                  'Partida finalizada correctamente',
                                 ),
                               ),
                             );
                           },
-                          /*onPressed: () {
-                            //partida.estado = 'Finalizada';
-
-                            Navigator.pop(context);
-
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => PlayerRatingView(
-                                  partida: partida, idUsuario: 0),
-                                ),
-                              );
-                            
-                          } ,*/
-                          child: const Text('Finalizar'),
+                          child: const Text(
+                            'Finalizar',
+                          ),
                         )
                       ],
                     )
                     );
-                 
                 },
                 child: const Text(
                   'Finalizar y puntuar',

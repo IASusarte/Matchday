@@ -62,4 +62,22 @@ class RequestApi {
       }
       return null;
   }
+
+  static Future<List<dynamic>>
+    obtenerSolicitudesRecibidas(
+  int idUsuario,
+  ) async {
+
+    final response = await http.get(
+      Uri.parse(
+        '${ApiConfig.baseUrl}/usuarios/$idUsuario/solicitudes-recibidas',
+      ),
+    );
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    }
+
+    return [];
+  }
 }

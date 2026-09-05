@@ -1,10 +1,7 @@
 //import 'dart:js_interop';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-//import '../models/partida.dart';
-import 'active_matches_view.dart';
 import '../data/session.dart';
-//import '../repos/partida_repo.dart';
 import '../api/api_match.dart';
 
 class CreateMatchView extends StatefulWidget {
@@ -342,7 +339,7 @@ class _CreateMatchViewState extends State<CreateMatchView> {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
                       content: Text(
-                        'La fecha y hora no pueden se del pasado'
+                        'La fecha y hora no pueden ser del pasado'
                       ),
                     ),
                   );
@@ -364,6 +361,7 @@ class _CreateMatchViewState extends State<CreateMatchView> {
                 if (!context.mounted) return;
 
                 if (res == null) {
+
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
                       content: Text(
@@ -373,26 +371,38 @@ class _CreateMatchViewState extends State<CreateMatchView> {
                   );
                   return;
                 } 
-                
+ 
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
                     content: Text(
                       'Partida creada correctamente',
                     ),
+                    duration: Duration(seconds: 1),
                   ),
                 );
 
-                Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => const ActiveMatchesView(),
-                    ),
-                  );
-                
+                fechaController.clear();
+                horaController.clear();
+                cantJugadoresController.clear();
+                lugarController.clear();
+                descripcionController.clear();
 
+                setState(() {
+                  deporteSeleccionado = null;
+                });
+                
+                await Future.delayed(
+                  const Duration(seconds: 1),
+                );
+
+                if (!context.mounted) return;
+
+                Navigator.pop(context);
+                
               },
               child: const Text('Crear'),
             ),
+            
           ],
         ),
       ),

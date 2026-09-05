@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../data/session.dart';
-//import '../utils/sports_utils.dart';
 import '../api/api_user.dart';
 
 class HistoryView extends StatefulWidget {
@@ -13,11 +12,13 @@ class HistoryView extends StatefulWidget {
 class _HistoryViewState extends State<HistoryView>{
 
   List<dynamic> historial = [];
+  bool cargando = true;
 
   Future<void> cargarHistorial() async {
     final data = await UserApi.obtenerHistorial(Session.usuarioId!);
     setState(() {
       historial = data;
+      cargando = false;
     });
   }
 
@@ -29,7 +30,7 @@ class _HistoryViewState extends State<HistoryView>{
 
   @override
   Widget build(BuildContext context) {
-    if (historial.isEmpty) {
+    if (cargando) {
       return const Scaffold(
         body: Center(
           child: CircularProgressIndicator(),
@@ -74,7 +75,7 @@ class _HistoryViewState extends State<HistoryView>{
                 final partida = historial[index];
 
                 Color colorEstado;
-                switch (partida.estado){
+                switch (partida["estado"]){
 
                   case 'Finalizada':
                     colorEstado = Colors.grey;

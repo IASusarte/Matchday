@@ -113,11 +113,14 @@ class _LoginViewState extends State<LoginView> {
               
               TextButton(
                 onPressed: () {
+                  emailController.clear();
+                  passController.clear();
                   Navigator.push(
                     context,
                     MaterialPageRoute(
                       builder: (context) => const RegisterView(),
                     ),
+                    
                   );
                 },
                 child: const Text(

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../api/api_match.dart';
 import 'match_detail_view.dart';
+import '../data/session.dart';
 
 class JoinMatchView extends StatefulWidget {
   const JoinMatchView({super.key});
@@ -12,11 +13,25 @@ class JoinMatchView extends StatefulWidget {
 class _JoinMatchViewState extends State<JoinMatchView> {
 
   List<dynamic> partidas = [];
+  bool cargando = true;
 
   Future<void> cargarPartidas() async {
     final data = await MatchApi.obtenerPartidasActivas();
+
     setState(() {
-      partidas = data;
+      partidas = data.where(
+      (p) => p["id_creador"] != Session.usuarioId).toList();
+      cargando = false;
+    });
+
+    final filtradas = data.where(
+      (p) => p["id_creador"] != Session.usuarioId,
+    ).toList();
+
+
+    setState(() {
+      partidas = filtradas;
+      cargando = false;
     });
   }
   @override
@@ -28,7 +43,7 @@ class _JoinMatchViewState extends State<JoinMatchView> {
   @override
   Widget build(BuildContext context) {
 
-    if (partidas.isEmpty) {
+    if (cargando) {
       return const Scaffold(
         body: Center(
           child: CircularProgressIndicator(),

@@ -150,6 +150,7 @@ void initState() {
               leading: const Icon(Icons.person),
               title: const Text('Datos personales'),
               onTap: () {
+                Navigator.pop(context);
                 Navigator.push(
                   context,
                   MaterialPageRoute(
@@ -163,6 +164,7 @@ void initState() {
               leading: const Icon(Icons.sports_soccer),
               title: const Text('Preferencias deportivas'),
               onTap: () {
+                Navigator.pop(context);
                 Navigator.push(
                   context,
                   MaterialPageRoute(
@@ -177,6 +179,7 @@ void initState() {
               title: const Text('Historial de partidas'),
               onTap: () 
               {
+                Navigator.pop(context);
                 Navigator.push(
                   context,
                   MaterialPageRoute(
