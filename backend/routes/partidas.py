@@ -29,10 +29,17 @@ def crear_partida(partida: CrearPartida):
     db.add(nueva_partida)
     db.commit()
     db.refresh(nueva_partida)
+    id_partida = nueva_partida.id_partida
+    participante = Participante(
+        id_usuario=nueva_partida.id_creador,
+        id_partida=id_partida
+    )
+    db.add(participante)
+    db.commit()
     db.close()
     return{
         "mensaje": "Partida creada exitosamente",
-        "id": nueva_partida.id_partida
+        "id": id_partida
     }
 
 # POST/id/finalizar
@@ -84,33 +91,6 @@ def obtener_partidas():
     db.close()
     return res
 
-# GET/id
-@router.get("/partidas/{id}")
-def obtener_partida(id: int):
-    db = sesion_local()
-    partida = db.query(
-        Partida
-    ).filter(
-        Partida.id_partida == id
-    ).first()
-    db.close()
-    if partida is None:
-        return {
-            "ok": False,
-            "mensaje": "Partida no encontrada"
-        }
-    return {
-        "id": partida.id_partida,
-        "id_creador": partida.id_creador,
-        "id_deporte": partida.id_deporte,
-        "fecha": str(partida.fecha),
-        "hora": str(partida.hora),
-        "cant_jugadores": partida.cant_jugadores,
-        "lugar": partida.lugar,
-        "descripcion": partida.descripcion,
-        "estado": partida.estado
-    }
-
 # GET/activas
 @router.get("/partidas/activas")
 def obtener_partidas_activas():
@@ -125,6 +105,7 @@ def obtener_partidas_activas():
         res.append(
             {
                 "id": partida.id_partida,
+                "id_creador": partida.id_creador,
                 "fecha": str(partida.fecha),
                 "hora": str(partida.hora),
                 "lugar": partida.lugar
@@ -132,6 +113,39 @@ def obtener_partidas_activas():
         )
     db.close()
     return res
+
+# GET/id
+@router.get("/partidas/{id}")
+def obtener_partida(id: int):
+    db = sesion_local()
+    partida = db.query(
+        Partida
+    ).filter(
+        Partida.id_partida == id
+    ).first()
+    usuario = db.query(
+    Usuario
+    ).filter(
+        Usuario.id_usuario == partida.id_creador
+    ).first()
+    db.close()
+    if partida is None:
+        return {
+            "ok": False,
+            "mensaje": "Partida no encontrada"
+        }
+    return {
+        "id": partida.id_partida,
+        "id_creador": partida.id_creador,
+        "organizador": usuario.nickname if usuario else "",
+        "id_deporte": partida.id_deporte,
+        "fecha": str(partida.fecha),
+        "hora": str(partida.hora),
+        "cant_jugadores": partida.cant_jugadores,
+        "lugar": partida.lugar,
+        "descripcion": partida.descripcion,
+        "estado": partida.estado
+    }
 
 # GET/id/detalle
 @router.get("/partidas/{id}/detalle")
@@ -515,3 +529,4 @@ def obtener_participantes_detalle(id: int):
             )
     db.close()
     return res
+

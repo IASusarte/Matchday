@@ -60,28 +60,6 @@ def obtener_solicitudes():
     db.close()
     return res
 
-# GET/id
-@router.get("/solicitudes/{id}")
-def obtener_solicitud(id: int):
-    db = sesion_local()
-    solicitud = db.query(
-        Solicitud
-    ).filter(
-        Solicitud.id_solicitud == id
-    ).first()
-    db.close()
-    if solicitud is None:
-        return {
-            "ok": False,
-            "mensaje": "Solicitud no encontrada"
-        }
-    return {
-        "id": solicitud.id_solicitud,
-        "id_usuario": solicitud.id_usuario,
-        "id_partida": solicitud.id_partida,
-        "estado": solicitud.estado
-    }
-
 # GET/detalles
 @router.get("/solicitudes/detalle")
 def obtener_solicitudes_detalle():
@@ -120,6 +98,28 @@ def obtener_solicitudes_detalle():
         )
     db.close()
     return res
+
+# GET/id
+@router.get("/solicitudes/{id}")
+def obtener_solicitud(id: int):
+    db = sesion_local()
+    solicitud = db.query(
+        Solicitud
+    ).filter(
+        Solicitud.id_solicitud == id
+    ).first()
+    db.close()
+    if solicitud is None:
+        return {
+            "ok": False,
+            "mensaje": "Solicitud no encontrada"
+        }
+    return {
+        "id": solicitud.id_solicitud,
+        "id_usuario": solicitud.id_usuario,
+        "id_partida": solicitud.id_partida,
+        "estado": solicitud.estado
+    }
 
 # PUT/id
 @router.put("/solicitudes/{id}")

@@ -207,6 +207,54 @@ def obtener_solicitudes_usuario(id: int):
     db.close()
     return res
 
+# GET/id/solicitudes-recibidas
+@router.get("/usuarios/{id}/solicitudes-recibidas")
+def obtener_solicitudes_recibidas(id: int):
+    db = sesion_local()
+    partidas = db.query(
+        Partida
+    ).filter(
+        Partida.id_creador == id
+    ).all()
+    ids_partidas = [
+        p.id_partida
+        for p in partidas
+    ]
+    solicitudes = db.query(
+        Solicitud
+    ).filter(
+        Solicitud.id_partida.in_(
+            ids_partidas
+        ),
+        Solicitud.estado == "Pendiente"
+    ).all()
+    res = []
+    for solicitud in solicitudes:
+        usuario = db.query(
+            Usuario
+        ).filter(
+            Usuario.id_usuario ==
+            solicitud.id_usuario
+        ).first()
+        partida = db.query(
+            Partida
+        ).filter(
+            Partida.id_partida ==
+            solicitud.id_partida
+        ).first()
+        res.append({
+            "id_solicitud": solicitud.id_solicitud,
+            "id_usuario": solicitud.id_usuario,
+            "nickname": usuario.nickname
+                if usuario else "",
+            "id_partida": solicitud.id_partida,
+            "lugar": partida.lugar
+                if partida else "",
+            "estado": solicitud.estado
+        })
+    db.close()
+    return res
+
 # GET/id/evaluaciones
 @router.get("/usuarios/{id}/evaluaciones")
 def obtener_evaluaciones_usuario(id: int):
@@ -394,7 +442,10 @@ def obtener_historial(id: int):
             res.append(
                 {
                     "id": partida.id_partida,
+                    "id_deporte": partida.id_deporte,
                     "fecha": str(partida.fecha),
+                    "hora": str(partida.hora),
+                    "lugar": partida.lugar,
                     "estado": partida.estado
                 }
             )
