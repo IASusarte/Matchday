@@ -154,4 +154,27 @@ class UserApi {
     }
     return null;
   }
+
+  static Future<List<dynamic>> obtenerPreferencias(
+  int idUsuario,
+  ) async {
+    final response = await http.get(Uri.parse('${ApiConfig.baseUrl}/usuarios/$idUsuario/preferencias'));
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    }
+    return [];
+  }
+
+  static Future<List<dynamic>>
+  obtenerPartidasVigentes(
+    int idUsuario,
+  ) async {
+    final response = await http.get(
+      Uri.parse(
+        '${ApiConfig.baseUrl}/usuarios/$idUsuario/partidas-vigentes',
+      ),
+    );
+
+    return jsonDecode(response.body);
+  }
 }

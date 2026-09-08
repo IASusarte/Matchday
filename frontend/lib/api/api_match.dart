@@ -12,6 +12,7 @@ class MatchApi {
     required int cantJugadores,
     required String lugar,
     required String descripcion,
+    required int idUbicacion,
   }) async {
     final response = await http.post(
       Uri.parse('${ApiConfig.baseUrl}/partidas'),
@@ -25,7 +26,7 @@ class MatchApi {
         'hora': hora,
         'cant_jugadores': cantJugadores,
         'lugar': lugar,
-        'id_ubicacion': null,
+        'id_ubicacion': idUbicacion,
         'descripcion': descripcion,
         'estado': 'Activa',
       }),
@@ -49,16 +50,16 @@ class MatchApi {
     return [];
   }
 
-static Future<Map<String, dynamic>?> obtenerPartida(
-  int id,
-) async {
-  final response = await http.get(
-    Uri.parse('${ApiConfig.baseUrl}/partidas/$id'),
-  );
-  if (response.statusCode == 200) {
-    return jsonDecode(response.body);
-  }
-  return null;
+  static Future<Map<String, dynamic>?> obtenerPartida(
+    int id,
+  ) async {
+    final response = await http.get(
+      Uri.parse('${ApiConfig.baseUrl}/partidas/$id'),
+    );
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    }
+    return null;
   }
 
   static Future<List<dynamic>> obtenerParticipantes(
@@ -112,5 +113,18 @@ static Future<Map<String, dynamic>?> obtenerPartida(
     }
 
     return [];
+  }
+  static Future<Map<String, dynamic>?>
+  abandonarPartida(
+    int idPartida,
+    int idUsuario,
+  ) async {
+    final response = await http.delete(
+      Uri.parse('${ApiConfig.baseUrl}/participantes/$idPartida/$idUsuario')
+    );
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    }
+    return null;
   }
 }

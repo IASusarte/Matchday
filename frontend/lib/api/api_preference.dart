@@ -49,4 +49,29 @@ static Future<void> eliminarPreferencia(
     ),
   );
 }
+
+static Future<Map<String, dynamic>>
+cambiarEstadoPreferencia(
+  int idUsuario,
+  int idDeporte,
+) async {
+
+  final url =
+      '${ApiConfig.baseUrl}/usuarios/$idUsuario/preferencias/$idDeporte';
+
+  final response = await http.put(
+    Uri.parse(url),
+  );
+
+  if (response.body.isEmpty) {
+    return {
+      "ok": false,
+      "mensaje": "Respuesta vacía del servidor"
+    };
+  }
+
+  return jsonDecode(
+    response.body,
+  );
+}
 }

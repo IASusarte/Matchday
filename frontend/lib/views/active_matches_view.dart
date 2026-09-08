@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'match_detail_view.dart';
-import '../api/api_match.dart';
+import '../api/api_user.dart';
+import '../data/session.dart';
+
 
 
 class ActiveMatchesView extends StatefulWidget {
@@ -13,16 +15,31 @@ class ActiveMatchesView extends StatefulWidget {
 class _ActiveMatchesViewState extends State<ActiveMatchesView> {
 
     List<dynamic> partidas = [];
+    List<dynamic> preferencias = [];
     bool cargando = true;
+    int? deporteSeleccionado;
 
     Future<void> cargarPartidas() async {
-      final data = await MatchApi.obtenerPartidas();
+      final prefs = await UserApi.obtenerPreferencias(
+        Session.usuarioId!,
+      );
+      final prefsActivas = prefs.where(
+        (p) => p["activo"] == true,
+      ).toList();
+      final data =
+        await UserApi.obtenerPartidasVigentes(
+          Session.usuarioId!,
+        );
       setState(() {
+        preferencias = prefsActivas;
+        if (prefsActivas.isNotEmpty) {
+          deporteSeleccionado =
+              prefsActivas.first["id"];
+        }
         partidas = data;
         cargando = false;
       });
     }
-
 
 
     @override
@@ -42,42 +59,94 @@ class _ActiveMatchesViewState extends State<ActiveMatchesView> {
     );
     }
 
+    final partidasFiltradas = partidas.where(
+      (p) => p["id_deporte"] == deporteSeleccionado,
+    ).toList();
+
     return Scaffold(
       backgroundColor: const Color(0xFF43AAE8),
 
       appBar: AppBar(
         backgroundColor: const Color(0xFF43AAE8),
         title: const Text('Partidas vigentes'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: cargarPartidas
+          ),
+        ],
       ),
 
-      
+      body: Column(
+        children: [
 
-      body: ListView.builder(
-        padding: const EdgeInsets.all(20),
-            itemCount: partidas.length,
-            itemBuilder: (context, index) {
-              final partida = partidas[index];
-              return Card(
-                child: ListTile(
-                  title: Text('Partida #${partida["id"]}'),
-                  subtitle: Text(
-                    '${partida["fecha"]}\n'
-                    '${partida["hora"]}\n'
-                    '${partida["lugar"]}',
+          Container(
+            height: 50,
+            margin: const EdgeInsets.all(10),
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              itemCount: preferencias.length,
+              itemBuilder: (context, index) {
+
+                final deporte = preferencias[index];
+
+                return Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: ChoiceChip(
+                    label: Text(deporte["nombre"]),
+                    selected:
+                        deporteSeleccionado == deporte["id"],
+                    onSelected: (selected) {
+                      setState(() {
+                        deporteSeleccionado =
+                            deporte["id"];
+                      });
+                    },
                   ),
-                  trailing: const Icon(Icons.arrow_forward),
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => MatchDetailView(idPartida: partida["id"]),
-                      ),
-                    );
-                  },
-                ),
-              );
-            },
-          )
+                );
+              },
+            ),
+          ),
+
+          Expanded(
+            child: ListView.builder(
+              padding: const EdgeInsets.all(20),
+              itemCount: partidasFiltradas.length,
+              itemBuilder: (context, index) {
+
+                final partida =
+                    partidasFiltradas[index];
+
+                return Card(
+                  child: ListTile(
+                    title: Text(
+                      'Partida #${partida["id"]}',
+                    ),
+                    subtitle: Text(
+                      '${partida["fecha"]}\n'
+                      '${partida["hora"]}\n'
+                      '${partida["lugar"]}',
+                    ),
+                    trailing:
+                        const Icon(Icons.arrow_forward),
+                    onTap: () async {
+                      await Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => MatchDetailView(
+                            idPartida: partida["id"],
+                          ),
+                        ),
+                      );
+                      await cargarPartidas();
+                    },
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
 
           /*Card(
             child: ListTile(

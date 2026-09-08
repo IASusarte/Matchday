@@ -32,7 +32,7 @@ class _SportsPreferencesViewState
       }
 
     List<dynamic> deportes = [];
-    List<int> seleccionados = [];
+    List<dynamic> preferencias = [];
 
     Future<void> cargarDeportes() async {
 
@@ -45,19 +45,14 @@ class _SportsPreferencesViewState
 
     Future<void> cargarPreferencias() async {
 
-      final data = await ApiPreference.obtenerPreferencias(
+      final data =
+          await ApiPreference.obtenerPreferencias(
         Session.usuarioId!,
       );
 
       setState(() {
-
-        seleccionados =
-            data.map<int>(
-          (d) => d["id"] as int,
-        ).toList();
-
+        preferencias = data;
       });
-
     }
 
   //bool futbol = true;
@@ -103,7 +98,17 @@ class _SportsPreferencesViewState
                 crossAxisSpacing: 10,
                 mainAxisSpacing: 10,
                       children: deportes.map((deporte) {
-
+                      final existe = preferencias.any(
+                        (p) => p["id"] == deporte["id"],
+                      );
+                      final pref = existe
+                          ? preferencias.firstWhere(
+                              (p) => p["id"] == deporte["id"],
+                            )
+                          : {
+                              "id": deporte["id"],
+                              "activo": false,
+                            };
                         return Card(
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
@@ -119,22 +124,37 @@ class _SportsPreferencesViewState
                               Text(
                                 deporte["nombre"],
                               ),
+                              
                               Checkbox(
-                                value: seleccionados.contains(
-                                  deporte["id"],
-                                ),
-                                onChanged: (value) {
-                                  setState(() {
-                                    if (value == true) {
-                                      seleccionados.add(
-                                        deporte["id"],
-                                      );
-                                    } else {
-                                      seleccionados.remove(
-                                        deporte["id"],
-                                      );
-                                    }
-                                  });
+                                
+                                value: pref["activo"] ?? false,
+                                onChanged: (value) async {
+                                  if (!existe) {
+                                    await UserApi.agregarPreferencia(
+                                      Session.usuarioId!,
+                                      deporte["id"],
+                                    );
+                                    await cargarPreferencias();
+                                    return;
+                                  }
+                                  final resp =
+                                      await ApiPreference.cambiarEstadoPreferencia(
+                                    Session.usuarioId!,
+                                    deporte["id"],
+                                  );
+                                  if (!context.mounted) return;
+                                  if (resp["ok"]) {
+                                    await cargarPreferencias();
+                                  } else {
+                                    ScaffoldMessenger.of(context)
+                                        .showSnackBar(
+                                      SnackBar(
+                                        content: Text(
+                                          resp["mensaje"],
+                                        ),
+                                      ),
+                                    );
+                                  }
                                 },
                               ),
                             ],
@@ -144,61 +164,6 @@ class _SportsPreferencesViewState
               ),
             ),
 
-            ElevatedButton(
-              onPressed: () async {
-
-                if (seleccionados.isEmpty) {
-
-                  ScaffoldMessenger.of(context)
-                      .showSnackBar(
-                    const SnackBar(
-                      content: Text(
-                        "Debe seleccionar al menos un deporte",
-                      ),
-                    ),
-                  );
-
-                  return;
-                }
-
-                final actuales =
-                    await ApiPreference.obtenerPreferencias(
-                  Session.usuarioId!,
-                );
-
-                for (final deporte in actuales) {
-
-                  await ApiPreference.eliminarPreferencia(
-                    Session.usuarioId!,
-                    deporte["id"],
-                  );
-
-                }
-
-                for (final idDeporte
-                    in seleccionados) {
-
-                  await UserApi.agregarPreferencia(
-                    Session.usuarioId!,
-                    idDeporte,
-                  );
-
-                }
-
-                if (!context.mounted) return;
-
-                ScaffoldMessenger.of(context)
-                    .showSnackBar(
-                  const SnackBar(
-                    content: Text(
-                      "Preferencias actualizadas",
-                    ),
-                  ),
-                );
-
-              },
-              child: const Text('Guardar preferencias'),
-            ),
 
             const SizedBox(height: 20),
           ],

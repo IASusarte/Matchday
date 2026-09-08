@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:proyecto_titulo/api/api_sports.dart';
+import '../api/api_sports.dart';
 import 'login_view.dart';
 import '../api/api_user.dart';
 import '../data/session.dart';
 import '../data/data_temp.dart';
-//import 'home_view.dart';
 
 class SportsView extends StatefulWidget {
   const SportsView({super.key});

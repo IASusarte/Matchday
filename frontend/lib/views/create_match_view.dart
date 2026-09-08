@@ -1,8 +1,11 @@
-//import 'dart:js_interop';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../data/session.dart';
 import '../api/api_match.dart';
+import '../api/api_user.dart';
+import '../api/api_location.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
 
 class CreateMatchView extends StatefulWidget {
   const CreateMatchView({super.key});
@@ -18,6 +21,34 @@ class _CreateMatchViewState extends State<CreateMatchView> {
   final TextEditingController cantJugadoresController = TextEditingController();
   final TextEditingController lugarController = TextEditingController();
   final TextEditingController descripcionController = TextEditingController();
+
+  List<dynamic> deportes = [];
+  List<dynamic> ubicaciones = [];
+
+  @override
+  void initState() {
+    super.initState();
+    cargarDeportes();
+    cargarUbicaciones();
+  }
+
+  Future<void> cargarDeportes() async {
+    final data = await UserApi.obtenerPreferencias(
+      Session.usuarioId!,
+    );
+    setState(() {
+      deportes = data.where(
+        (d) => d["activo"] == true,
+      ).toList();
+    });
+  }
+
+  Future<void> cargarUbicaciones() async {
+    final data = await LocationApi.obtenerUbicaciones();
+    setState(() {
+      ubicaciones = data;
+    });
+  }
 
 
   @override
@@ -46,6 +77,9 @@ class _CreateMatchViewState extends State<CreateMatchView> {
   }
 
   int? deporteSeleccionado;
+  int? ubicacionSeleccionada;
+
+  
 
 
 
@@ -85,29 +119,29 @@ class _CreateMatchViewState extends State<CreateMatchView> {
                 filled: true,
                 fillColor: Colors.white,
               ),
-              items: const [
-                DropdownMenuItem( 
-                  value: 1,
-                  child: Text('⚽ Fútbol'),
-                ),
-                DropdownMenuItem( 
-                  value: 2,
-                  child: Text('🎾 Tenis'),
-                ),
-                DropdownMenuItem( 
-                  value: 3,
-                  child: Text('🏀 Básquetbol'),
-                ),
-                DropdownMenuItem( 
-                  value: 4,
-                  child: Text('🏐 Vóleibol'),
-                ),
-              ],
-              onChanged: (value) {
-              setState(() {
-                deporteSeleccionado = value;
-              });
-            },
+              items: deportes.map<DropdownMenuItem<int>>(
+                (deporte) {
+
+                  return DropdownMenuItem<int>(
+                    value: deporte["id"],
+                    child: Text(
+                      deporte["nombre"],
+                    ),
+                  );
+
+                },
+              ).toList(),
+              onChanged: (value) async {
+                if (value == null) return;
+                final ubicacionesFiltradas = await LocationApi
+                        .obtenerUbicacionesPorDeporte(value);
+                setState(() {
+                  deporteSeleccionado = value;
+                  ubicaciones = ubicacionesFiltradas;
+                  ubicacionSeleccionada = null;
+                  lugarController.clear();
+                });
+              },
             ),
 
 
@@ -187,8 +221,9 @@ class _CreateMatchViewState extends State<CreateMatchView> {
 
             TextField(
               controller: lugarController,
+              readOnly: true,
               decoration: const InputDecoration(
-                labelText: 'Lugar',
+                labelText: 'Lugar seleccionado',
                 filled: true,
                 fillColor: Colors.white,
               ),
@@ -214,29 +249,104 @@ class _CreateMatchViewState extends State<CreateMatchView> {
               decoration: BoxDecoration(
                 border: Border.all(color: Colors.white),
               ),
-              child: Image.asset(
-                'assets/images/map.png',
-                fit: BoxFit.cover,
-              ),
+              child: FlutterMap(
+                options: MapOptions(
+                  initialCenter: LatLng(
+                    -34.982,
+                    -71.239,
+                  ),
+                  initialZoom: 15,
+                ),
+                children: [
+                  TileLayer(
+                    urlTemplate:
+                        'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                  ),
+                  MarkerLayer(
+                    markers: ubicaciones.map(
+                      (u) {
+                        return Marker(
+                          point: LatLng(
+                            u["latitud"],
+                            u["longitud"],
+                          ),
+                          child: GestureDetector(
+                            onTap: () {
+                              setState(() {
+                                ubicacionSeleccionada =
+                                    u["id"];
+                                lugarController.text =
+                                    u["nombre"];
+                              });
+                            },
+                            child: Icon(
+                              Icons.location_pin,
+                              color:
+                                  ubicacionSeleccionada ==
+                                          u["id"]
+                                      ? Colors.green
+                                      : Colors.red,
+                              size: 40,
+                            ),
+                          ),
+                        );
+
+                      },
+                    ).toList(),
+                  )
+                ],
+              )
             ),
+
+            if (ubicacionSeleccionada != null)
+              Builder(
+                builder: (context) {
+                  final ubicacion =
+                      ubicaciones.firstWhere(
+                    (u) =>
+                        u["id"] ==
+                        ubicacionSeleccionada,
+                  );
+                  return Padding(
+                    padding: const EdgeInsets.only(
+                      top: 10,
+                    ),
+                    child: Column(
+                      children: [
+                        Text(
+                          ubicacion["nombre"],
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          "Dirección: ${ubicacion["direccion"]}",
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
 
             const SizedBox(height: 30),
 
             ElevatedButton(
               onPressed: () async {
-                /*print('Deporte: ${deporteController.text}');
-                print('Fecha: ${fechaController.text}');
-                print('Hora: ${horaController.text}');
-                print('Cantidad de jugadores: ${cantJugadoresController.text}');
-                print('Lugar: ${lugarController.text}');
-                print('Descripción: ${descripcionController.text}');*/
 
                 if(
                   deporteSeleccionado == null ||
                   fechaController.text.isEmpty ||
                   horaController.text.isEmpty ||
                   cantJugadoresController.text.isEmpty ||
-                  lugarController.text.isEmpty 
+                  lugarController.text.isEmpty ||
+                  ubicacionSeleccionada == null
                 ) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
@@ -346,6 +456,17 @@ class _CreateMatchViewState extends State<CreateMatchView> {
                   return;
                 }
 
+                if (ubicacionSeleccionada == null) {
+                  ScaffoldMessenger.of(context)
+                      .showSnackBar(
+                    const SnackBar(
+                      content: Text(
+                        'Debe seleccionar una ubicación',
+                      ),
+                    ),
+                  );
+                  return;
+                }
 
                 final res = await MatchApi.crearPartida(
                   idCreador: Session.usuarioId!,
@@ -356,9 +477,22 @@ class _CreateMatchViewState extends State<CreateMatchView> {
                   cantJugadores: cant,
                   lugar: lugarController.text,
                   descripcion: descripcionController.text,
+                  idUbicacion: ubicacionSeleccionada!,
                 );
 
                 if (!context.mounted) return;
+
+                if (res?["ok"] == false) {
+                  ScaffoldMessenger.of(context)
+                      .showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        res?["mensaje"],
+                      ),
+                    ),
+                  );
+                  return;
+                }
 
                 if (res == null) {
 
@@ -384,7 +518,7 @@ class _CreateMatchViewState extends State<CreateMatchView> {
                 fechaController.clear();
                 horaController.clear();
                 cantJugadoresController.clear();
-                lugarController.clear();
+                //lugarController.clear();
                 descripcionController.clear();
 
                 setState(() {

@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-//import 'rate_players_view.dart';
-import 'player_rating_view.dart';
 import '../utils/sports_utils.dart';
 import '../api/api_match.dart';
 import '../api/api_request.dart';
@@ -53,6 +51,9 @@ class MatchDetailView extends StatefulWidget {
     }
 
     final participantesActuales = participantes.length;
+    final participa = participantes.any(
+      (p) => p["id_usuario"] == Session.usuarioId
+    );
 
     //final participantesActuales = participantesPartida.length;
     final cuposDisponibles = partida!["cant_jugadores"] - participantesActuales;
@@ -239,6 +240,7 @@ class MatchDetailView extends StatefulWidget {
                         ),
                       ),
                     );
+                    return;
                   }
 
 
@@ -254,8 +256,15 @@ class MatchDetailView extends StatefulWidget {
                       ),
                       actions: [
                         TextButton(
+                          onPressed: () {
+                            Navigator.pop(context);
+                          },
+                          child: const Text(
+                            'Cancelar',
+                          ),
+                        ),
+                        ElevatedButton(
                           onPressed: () async {
-
                             final res = await MatchApi.finalizarPartida(widget.idPartida,);
                             if (!context.mounted) return;
                             if (res?["ok"] == false) {
@@ -283,8 +292,8 @@ class MatchDetailView extends StatefulWidget {
                           child: const Text(
                             'Finalizar',
                           ),
-                        )
-                      ],
+                        ),
+                      ]
                     )
                     );
                 },
@@ -297,7 +306,104 @@ class MatchDetailView extends StatefulWidget {
                 ),
               ),
             ),
-          )
+          ),
+
+          if (participa && !esOrganizador)
+
+            Center(
+              child: SizedBox(
+                width: 250,
+                height: 60,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red,
+                  ),
+                  onPressed: () async {
+
+                    final confirmar = await showDialog<bool>(
+                      context: context,
+                      builder: (context) => AlertDialog(
+                        title: const Text(
+                          'Abandonar partida',
+                        ),
+                        content: const Text(
+                          '¿Está seguro que desea abandonar esta partida?',
+                        ),
+                        actions: [
+
+                          TextButton(
+                            onPressed: () {
+                              Navigator.pop(
+                                context,
+                                false,
+                              );
+                            },
+                            child: const Text(
+                              'Cancelar',
+                            ),
+                          ),
+
+                          ElevatedButton(
+                            onPressed: () {
+                              Navigator.pop(
+                                context,
+                                true,
+                              );
+                            },
+                            child: const Text(
+                              'Abandonar',
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+
+                    if (confirmar != true) return;
+
+                    final res =
+                        await MatchApi.abandonarPartida(
+                      widget.idPartida,
+                      Session.usuarioId!,
+                    );
+
+                    if (!context.mounted) return;
+
+                    if (res?["ok"] == false) {
+
+                      ScaffoldMessenger.of(context)
+                          .showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            res?["mensaje"] ??
+                            "No fue posible abandonar la partida",
+                          ),
+                        ),
+                      );
+
+                      return;
+                    }
+
+                    ScaffoldMessenger.of(context)
+                        .showSnackBar(
+                      const SnackBar(
+                        content: Text(
+                          'Has abandonado la partida',
+                        ),
+                      ),
+                    );
+
+                    Navigator.pop(context);
+                  },
+                  child: const Text(
+                    'Abandonar partida',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                    ),
+                  ),
+                ),
+              ),
+            ),
         ],
       ),
     ),

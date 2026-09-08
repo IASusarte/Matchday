@@ -39,6 +39,12 @@ class _RequestsViewState extends State<RequestsView> {
       appBar: AppBar(
         backgroundColor: const Color(0xFF43AAE8),
         title: const Text('Solicitudes de participación'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: cargarSolicitudes
+          ),
+        ],
       ),
 
       body: Column(

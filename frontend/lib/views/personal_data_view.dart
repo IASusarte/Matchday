@@ -236,6 +236,9 @@ class _PersonalDataViewState extends State<PersonalDataView>{
                   ),
                 );
 
+                passwordPerfilController.clear();
+                await cargarUsuario();
+
               },
               child: const Text(
                 'Guardar perfil',

@@ -149,7 +149,7 @@ void initState() {
             ListTile(
               leading: const Icon(Icons.person),
               title: const Text('Datos personales'),
-              onTap: () {
+              onTap: () async {
                 Navigator.pop(context);
                 Navigator.push(
                   context,
@@ -157,13 +157,14 @@ void initState() {
                     builder: (_) => const PersonalDataView(),
                   ),
                 );
+                await cargarUsuario();
               },
             ),
 
             ListTile(
               leading: const Icon(Icons.sports_soccer),
               title: const Text('Preferencias deportivas'),
-              onTap: () {
+              onTap: () async {
                 Navigator.pop(context);
                 Navigator.push(
                   context,
@@ -171,6 +172,7 @@ void initState() {
                     builder: (_) => const SportsPreferencesView(),
                   ),
                 );
+                await cargarUsuario();
               },
             ),
 

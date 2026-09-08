@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 import '../api/api_match.dart';
 import 'match_detail_view.dart';
 import '../data/session.dart';
+import '../api/api_user.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
+import '../api/api_location.dart';
 
 class JoinMatchView extends StatefulWidget {
   const JoinMatchView({super.key});
@@ -14,30 +18,41 @@ class _JoinMatchViewState extends State<JoinMatchView> {
 
   List<dynamic> partidas = [];
   bool cargando = true;
+  List<dynamic> ubicaciones = [];
 
   Future<void> cargarPartidas() async {
     final data = await MatchApi.obtenerPartidasActivas();
-
-    setState(() {
-      partidas = data.where(
-      (p) => p["id_creador"] != Session.usuarioId).toList();
-      cargando = false;
-    });
-
+    final preferencias = await UserApi.obtenerPreferencias(Session.usuarioId!);
+    final deportesPermitidos =
+        preferencias.map<int>(
+          (p) => p["id"],
+        ).toList();
     final filtradas = data.where(
-      (p) => p["id_creador"] != Session.usuarioId,
+      (p) =>
+          p["id_creador"] != Session.usuarioId &&
+          deportesPermitidos.contains(
+            p["id_deporte"],
+          ),
     ).toList();
-
-
     setState(() {
       partidas = filtradas;
       cargando = false;
     });
   }
+
+  Future<void> cargarUbicaciones() async {
+    final data =
+        await LocationApi.obtenerUbicaciones();
+    setState(() {
+      ubicaciones = data;
+    });
+  }
+
   @override
   void initState() {
     super.initState();
     cargarPartidas();
+    cargarUbicaciones();
   }
 
   @override
@@ -57,6 +72,12 @@ class _JoinMatchViewState extends State<JoinMatchView> {
       appBar: AppBar(
         backgroundColor: const Color(0xFF43AAE8),
         title: const Text('Partidas disponibles'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: cargarPartidas
+          ),
+        ],
       ),
 
       body: SingleChildScrollView(
@@ -81,10 +102,57 @@ class _JoinMatchViewState extends State<JoinMatchView> {
               decoration: BoxDecoration(
                 border: Border.all(color: Colors.white),
               ),
-              child: Image.asset(
-                'assets/images/map.png',
-                fit: BoxFit.cover,
-              ),
+              child: FlutterMap(
+                options: MapOptions(
+                initialCenter: LatLng(
+                  -34.982,
+                  -71.239,
+                ),
+                  initialZoom: 16,
+                ),
+                children: [
+                  TileLayer(
+                    urlTemplate:
+                      'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                  ),
+                  MarkerLayer(
+                    markers: partidas.map(
+                      (p) {
+                        final ubicacion = ubicaciones.firstWhere(
+                          (u) =>
+                            u["id"] ==
+                            p["id_ubicacion"],
+                        );
+                        return Marker(
+                          point: LatLng(
+                            ubicacion["latitud"],
+                            ubicacion["longitud"],
+                          ),
+                          child: GestureDetector(
+                            onTap: () async {
+                              await Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) =>
+                                    MatchDetailView(
+                                      idPartida: p["id"],
+                                    ),
+                                ),
+                              );
+                              await cargarPartidas();
+                            },
+                            child: const Icon(
+                              Icons.sports_soccer,
+                              size: 40,
+                              color: Colors.red,
+                            ),
+                          ),
+                        );
+                      },
+                    ).toList(),
+                  )
+                ],
+              )
             ),
 
             const SizedBox(height: 20),
@@ -110,9 +178,9 @@ class _JoinMatchViewState extends State<JoinMatchView> {
                     trailing: const Icon(
                       Icons.arrow_forward,
                     ),
-                    onTap: () {
+                    onTap: () async {
 
-                      Navigator.push(
+                      await Navigator.push(
                         context,
                         MaterialPageRoute(
                           builder: (_) => MatchDetailView(
@@ -120,7 +188,7 @@ class _JoinMatchViewState extends State<JoinMatchView> {
                           ),
                         ),
                       );
-
+                      await cargarPartidas();
                     },
                   ),
                 );
