@@ -5,6 +5,8 @@ router = APIRouter()
 from bd import sesion_local
 from models.preferencia_deporte import PreferenciaDeporte
 from models.deporte import Deporte
+from models.partida import Partida
+from models.participante import Participante
 from schems.preferencia_schem import CrearPreferencia
 
 # PREFERENCIAS
@@ -23,14 +25,14 @@ def obtener_preferencias(id: int):
         deporte = db.query(
             Deporte
         ).filter(
-            Deporte.id_deporte ==
-            preferencia.id_deporte
+            Deporte.id_deporte == preferencia.id_deporte
         ).first()
         if deporte:
             res.append(
                 {
                     "id": deporte.id_deporte,
-                    "nombre": deporte.nombre
+                    "nombre": deporte.nombre,
+                    "activo": preferencia.activo
                 }
             )
     db.close()
@@ -95,3 +97,54 @@ def eliminar_preferencia(
         "mensaje": "Preferencia eliminada"
     }
 
+@router.put("/usuarios/{id}/preferencias/{id_deporte}")
+def cambiar_estado_preferencia(
+    id: int,
+    id_deporte: int
+):
+    db = sesion_local()
+    preferencia = db.query(
+        PreferenciaDeporte
+    ).filter(
+        PreferenciaDeporte.id_usuario == id,
+        PreferenciaDeporte.id_deporte == id_deporte
+    ).first()
+    if not preferencia:
+        db.close()
+        return {
+            "ok": False,
+            "mensaje": "Preferencia no encontrada"
+        }
+    if preferencia.activo:
+        partida_creada = db.query(
+            Partida
+        ).filter(
+            Partida.id_creador == id,
+            Partida.id_deporte == id_deporte,
+            Partida.id_estado.in_([1, 2])
+        ).first()
+        participacion = db.query(
+            Participante
+        ).join(
+            Partida,
+            Participante.id_partida == Partida.id_partida
+        ).filter(
+            Participante.id_usuario == id,
+            Partida.id_deporte == id_deporte,
+            Partida.id_estado.in_([1, 2])
+        ).first()
+        if partida_creada or participacion:
+            db.close()
+            return {
+                "ok": False,
+                "mensaje":
+                "No puede desactivar este deporte porque posee partidas vigentes."
+            }
+    preferencia.activo = not preferencia.activo
+    estado = preferencia.activo
+    db.commit()
+    db.close()
+    return {
+        "ok": True,
+        "activo": estado
+    }

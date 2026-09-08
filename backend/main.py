@@ -29,16 +29,8 @@ app.include_router(evaluaciones_router)
 app.include_router(ubicaciones_router)
 app.include_router(preferencias_router)
 
-# PRUEBA
-
 @app.get("/")
 def inicio():
     return {
         "mensaje": "API Matchday funcionando"
-    }
-
-@app.get("/prueba")
-def prueba():
-    return{
-        "mensaje": "Primer endpoint"
     }

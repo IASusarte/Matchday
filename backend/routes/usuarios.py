@@ -439,6 +439,27 @@ def obtener_historial(id: int):
             participante.id_partida
         ).first()
         if partida:
+            participantes_partida = db.query(
+                Participante
+            ).filter(
+                Participante.id_partida ==
+                partida.id_partida
+            ).all()
+            total_a_evaluar = max(
+                len(participantes_partida) - 1,
+                0
+            )
+            evaluaciones_realizadas = db.query(
+                Evaluacion
+            ).filter(
+                Evaluacion.id_partida ==
+                partida.id_partida,
+                Evaluacion.id_evaluador == id
+            ).count()
+            pendiente_puntuar = (
+                evaluaciones_realizadas <
+                total_a_evaluar
+            )
             res.append(
                 {
                     "id": partida.id_partida,
@@ -446,7 +467,8 @@ def obtener_historial(id: int):
                     "fecha": str(partida.fecha),
                     "hora": str(partida.hora),
                     "lugar": partida.lugar,
-                    "estado": partida.estado
+                    "estado": partida.estado,
+                    "pendiente_puntuar": pendiente_puntuar
                 }
             )
     db.close()
@@ -559,6 +581,59 @@ def obtener_dashboard(id: int):
         "promedio_fairplay": fairplay,
         "promedio_nivel_juego": nivel_juego
     }
+
+# GET/id/partidas-vigentes
+@router.get("/usuarios/{id}/partidas-vigentes")
+def obtener_partidas_vigentes(id: int):
+    db = sesion_local()
+    res = []
+    partidas_creadas = db.query(
+        Partida
+    ).filter(
+        Partida.id_creador == id,
+        Partida.id_estado.in_([1, 2])
+    ).all()
+    for partida in partidas_creadas:
+        res.append({
+            "id": partida.id_partida,
+            "id_deporte": partida.id_deporte,
+            "fecha": str(partida.fecha),
+            "hora": str(partida.hora),
+            "lugar": partida.lugar,
+            "estado": partida.estado,
+            "id_estado": partida.id_estado
+        })
+    participaciones = db.query(
+        Participante
+    ).filter(
+        Participante.id_usuario == id
+    ).all()
+    for participacion in participaciones:
+        partida = db.query(
+            Partida
+        ).filter(
+            Partida.id_partida ==
+            participacion.id_partida,
+            Partida.id_estado.in_([1, 2]
+            )
+        ).first()
+        if partida:
+            existe = any(
+                p["id"] == partida.id_partida
+                for p in res
+            )
+            if not existe:
+                res.append({
+                    "id": partida.id_partida,
+                    "id_deporte": partida.id_deporte,
+                    "fecha": str(partida.fecha),
+                    "hora": str(partida.hora),
+                    "lugar": partida.lugar,
+                    "estado": partida.estado,
+                    "id_estado": partida.id_estado
+                })
+    db.close()
+    return res
 
 # PUT/id/perfil
 @router.put("/usuarios/{id}/perfil")
@@ -685,7 +760,7 @@ def obtener_home(id: int):
     partidas_activas = db.query(
         Partida
     ).filter(
-        Partida.estado == "Activa"
+        Partida.id_estado == 1
     ).count()
     db.close()
     return {

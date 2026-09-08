@@ -8,6 +8,20 @@ from models.usuario import Usuario
 from models.solicitud import Solicitud
 from models.participante import Participante
 from schems.partida_schem import CrearPartida
+from datetime import datetime
+from datetime import timedelta
+
+# DURACIÓN PARTIDAS
+def hay_traslape(
+    inicio_1,
+    fin_1,
+    inicio_2,
+    fin_2
+):
+    return (
+        inicio_1 < fin_2 and
+        inicio_2 < fin_1
+    )
 
 # PARTIDAS
 
@@ -15,6 +29,42 @@ from schems.partida_schem import CrearPartida
 @router.post("/partidas")
 def crear_partida(partida: CrearPartida):
     db = sesion_local()
+    nueva_fecha_hora = datetime.combine(
+        partida.fecha,
+        partida.hora
+    )
+    nuevo_fin = (
+        nueva_fecha_hora +
+        timedelta(hours=2)
+    )
+    partidas_misma_ubicacion = db.query(
+        Partida
+    ).filter(
+        Partida.id_ubicacion ==
+        partida.id_ubicacion,
+        Partida.id_estado.in_([1, 2])
+    ).all()
+    for p in partidas_misma_ubicacion:
+        inicio_existente = datetime.combine(
+            p.fecha,
+            p.hora
+        )
+        fin_existente = (
+            inicio_existente +
+            timedelta(hours=2)
+        )
+        if hay_traslape(
+            nueva_fecha_hora,
+            nuevo_fin,
+            inicio_existente,
+            fin_existente
+        ):
+            db.close()
+            return {
+                "ok": False,
+                "mensaje":
+                "La ubicación ya se encuentra reservada en ese horario."
+            }
     nueva_partida = Partida(
         id_creador=partida.id_creador,
         id_deporte=partida.id_deporte,
@@ -24,7 +74,8 @@ def crear_partida(partida: CrearPartida):
         lugar=partida.lugar,
         id_ubicacion=partida.id_ubicacion,
         descripcion=partida.descripcion,
-        estado=partida.estado,
+        id_estado=1,
+        estado="Activa"
     )
     db.add(nueva_partida)
     db.commit()
@@ -37,7 +88,8 @@ def crear_partida(partida: CrearPartida):
     db.add(participante)
     db.commit()
     db.close()
-    return{
+    return {
+        "ok": True,
         "mensaje": "Partida creada exitosamente",
         "id": id_partida
     }
@@ -58,6 +110,7 @@ def finalizar_partida(id: int):
             "mensaje": "Partida no encontrada"
         }
     partida.estado = "Finalizada"
+    partida.id_estado = 4
     db.commit()
     db.close()
     return {
@@ -85,7 +138,8 @@ def obtener_partidas():
                 "lugar": partida.lugar,
                 "id_ubicacion": partida.id_ubicacion,
                 "descripcion": partida.descripcion,
-                "estado": partida.estado
+                "estado": partida.estado,
+                "id_estado": partida.id_estado
             }
         )
     db.close()
@@ -98,7 +152,7 @@ def obtener_partidas_activas():
     partidas = db.query(
         Partida
     ).filter(
-        Partida.estado == "Activa"
+        Partida.id_estado == 1
     ).all()
     res = []
     for partida in partidas:
@@ -106,6 +160,9 @@ def obtener_partidas_activas():
             {
                 "id": partida.id_partida,
                 "id_creador": partida.id_creador,
+                "id_deporte": partida.id_deporte,
+                "id_estado": partida.id_estado,
+                "id_ubicacion": partida.id_ubicacion,
                 "fecha": str(partida.fecha),
                 "hora": str(partida.hora),
                 "lugar": partida.lugar
@@ -143,8 +200,10 @@ def obtener_partida(id: int):
         "hora": str(partida.hora),
         "cant_jugadores": partida.cant_jugadores,
         "lugar": partida.lugar,
+        "id_ubicacion": partida.id_ubicacion,
         "descripcion": partida.descripcion,
-        "estado": partida.estado
+        "estado": partida.estado,
+        "id_estado": partida.id_estado
     }
 
 # GET/id/detalle
@@ -370,7 +429,6 @@ def aceptar_solicitud(
             "ok": False,
             "mensaje": "La solicitud no pertenece a esta partida"
         }
-    solicitud.estado = "Aceptada"
     partida = db.query(
         Partida
     ).filter(
@@ -388,6 +446,9 @@ def aceptar_solicitud(
         Participante.id_partida == id
     ).count()
     if participantes_actuales >= partida.cant_jugadores:
+        partida.estado = "Completa"
+        partida.id_estado = 2
+        db.commit()
         db.close()
         return {
             "ok": False,
@@ -405,12 +466,69 @@ def aceptar_solicitud(
             "ok": False,
             "mensaje": "El usuario ya participa en esta partida"
         }
+    inicio_nueva = datetime.combine(
+        partida.fecha,
+        partida.hora
+    )
+    fin_nueva = (
+        inicio_nueva +
+        timedelta(hours=2)
+    )
+    participaciones_usuario = db.query(
+        Participante
+    ).filter(
+        Participante.id_usuario ==
+        solicitud.id_usuario
+    ).all()
+    for participacion in participaciones_usuario:
+        otra_partida = db.query(
+            Partida
+        ).filter(
+            Partida.id_partida ==
+            participacion.id_partida,
+            Partida.id_estado.in_([1, 2])
+        ).first()
+        if not otra_partida:
+            continue
+        if otra_partida.id_partida == id:
+            continue
+        inicio_existente = datetime.combine(
+            otra_partida.fecha,
+            otra_partida.hora
+        )
+        fin_existente = (
+            inicio_existente +
+            timedelta(hours=2)
+        )
+        if hay_traslape(
+            inicio_nueva,
+            fin_nueva,
+            inicio_existente,
+            fin_existente
+        ):
+            db.close()
+            return {
+                "ok": False,
+                "mensaje":
+                "El usuario ya participa en otra partida en ese horario."
+            }
+    solicitud.estado = "Aceptada"
+    solicitud.id_estado = 2
     participante = Participante(
         id_usuario=solicitud.id_usuario,
         id_partida=id
     )
     db.add(participante)
     db.commit()
+    participantes_actuales = db.query(
+        Participante
+    ).filter(
+        Participante.id_partida == id
+    ).count()
+    if participantes_actuales >= partida.cant_jugadores:
+        partida.estado = "Completa"
+        partida.id_estado = 2
+        db.commit()
     db.close()
     return {
         "ok": True,
@@ -443,6 +561,7 @@ def rechazar_solicitud(
             "mensaje": "La solicitud no pertenece a esta partida"
         }
     solicitud.estado = "Rechazada"
+    solicitud.id_estado = 3
     db.commit()
     db.refresh(solicitud)
     db.close()

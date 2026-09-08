@@ -37,6 +37,32 @@ def crear_participante(datos: CrearParticipante):
         "id": participante.id_participante
     }
 
+# DELETE/id_partida/id_usuario
+@router.delete("/participantes/{id_partida}/{id_usuario}")
+def abandonar_partida(
+    id_partida: int,
+    id_usuario: int
+):
+    db = sesion_local()
+    participante = db.query(
+        Participante
+    ).filter(
+        Participante.id_partida == id_partida,
+        Participante.id_usuario == id_usuario
+    ).first()
+    if not participante:
+        db.close()
+        return {
+            "ok": False,
+            "mensaje": "No participa en esta partida"
+        }
+    db.delete(participante)
+    db.commit()
+    db.close()
+    return {
+        "ok": True
+    }
+
 # GET
 @router.get("/participantes")
 def obtener_participantes():

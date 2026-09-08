@@ -1,5 +1,8 @@
+
+
 from sqlalchemy import Column
 from sqlalchemy import Integer
+from sqlalchemy import Boolean
 
 
 from sqlalchemy.orm import declarative_base
@@ -15,3 +18,7 @@ class PreferenciaDeporte(Base):
         primary_key=True)
     id_usuario = Column(Integer)
     id_deporte = Column(Integer)
+    activo = Column(
+        Boolean,
+        default=True
+        )

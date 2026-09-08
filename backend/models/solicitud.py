@@ -16,3 +16,4 @@ class Solicitud(Base):
     id_usuario = Column(Integer)
     id_partida = Column(Integer)
     estado = Column(String(20))
+    id_estado = Column(Integer)

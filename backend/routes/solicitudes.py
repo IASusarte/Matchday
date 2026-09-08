@@ -29,7 +29,8 @@ def crear_solicitud(datos: CrearSolicitud):
     nueva_solicitud = Solicitud(
         id_usuario=datos.id_usuario,
         id_partida=datos.id_partida,
-        estado=datos.estado
+        estado="Pendiente",
+        id_estado=1
     )
     db.add(nueva_solicitud)
     db.commit()
@@ -54,7 +55,8 @@ def obtener_solicitudes():
                 "id": solicitud.id_solicitud,
                 "id_usuario": solicitud.id_usuario,
                 "id_partida": solicitud.id_partida,
-                "estado": solicitud.estado
+                "estado": solicitud.estado,
+                "id_estado": solicitud.id_estado
             }
         )
     db.close()
@@ -93,7 +95,8 @@ def obtener_solicitudes_detalle():
                 "lugar": partida.lugar
                     if partida
                     else "",
-                "estado": solicitud.estado
+                "estado": solicitud.estado,
+                "id_estado": solicitud.id_estado
             }
         )
     db.close()
@@ -118,7 +121,8 @@ def obtener_solicitud(id: int):
         "id": solicitud.id_solicitud,
         "id_usuario": solicitud.id_usuario,
         "id_partida": solicitud.id_partida,
-        "estado": solicitud.estado
+        "estado": solicitud.estado,
+        "id_estado": solicitud.id_estado
     }
 
 # PUT/id

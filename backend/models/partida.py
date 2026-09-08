@@ -25,3 +25,4 @@ class Partida(Base):
     id_ubicacion = Column(Integer)
     descripcion = Column(String(500))
     estado = Column(String(20))
+    id_estado = Column(Integer)

@@ -4,10 +4,11 @@ router = APIRouter()
 
 from bd import sesion_local
 from models.ubicacion import Ubicacion
-from models.ubicacion_deporte import UbicacionDeporte
+from models.ubicaciones_deporte import UbicacionDeporte
 from models.deporte import Deporte
 from schems.ubicacion_schem import CrearUbicacion
 from schems.ubicacion_deporte_schem import CrearUbicacionDeporte
+from models.ubicacion import Ubicacion
 
 # UBICACIONES
 
@@ -42,20 +43,21 @@ def obtener_ubicacion(id: int):
     ).filter(
         Ubicacion.id_ubicacion == id
     ).first()
-    db.close()
-    if ubicacion is None:
+    if not ubicacion:
+        db.close()
         return {
-            "ok": False,
-            "mensaje": "Ubicación no encontrada"
+            "ok": False
         }
-    return {
+    res = {
         "id": ubicacion.id_ubicacion,
         "nombre": ubicacion.nombre,
-        "ciudad": ubicacion.ciudad,
         "direccion": ubicacion.direccion,
+        "ciudad": ubicacion.ciudad,
         "latitud": ubicacion.latitud,
         "longitud": ubicacion.longitud
     }
+    db.close()
+    return res
 
 # GET/id/detalle
 @router.get("/ubicaciones/{id}/detalle")
@@ -239,37 +241,6 @@ def obtener_ubicaciones_deporte():
     db.close()
     return res
 
-# GET/deportes/id
-@router.get("/deportes/{id}/ubicaciones")
-def obtener_ubicaciones_deporte(id: int):
-    db = sesion_local()
-    relaciones = db.query(
-        UbicacionDeporte
-    ).filter(
-        UbicacionDeporte.id_deporte == id
-    ).all()
-    res = []
-    for relacion in relaciones:
-        ubicacion = db.query(
-            Ubicacion
-        ).filter(
-            Ubicacion.id_ubicacion ==
-            relacion.id_ubicacion
-        ).first()
-        if ubicacion:
-            res.append(
-                {
-                    "id": ubicacion.id_ubicacion,
-                    "nombre": ubicacion.nombre,
-                    "ciudad": ubicacion.ciudad,
-                    "direccion": ubicacion.direccion,
-                    "latitud": ubicacion.latitud,
-                    "longitud": ubicacion.longitud
-                }
-            )
-    db.close()
-    return res
-
 # GET/id/deportes
 @router.get("/ubicaciones/{id}/deportes")
 def obtener_deportes_ubicacion(
@@ -294,6 +265,40 @@ def obtener_deportes_ubicacion(
                 {
                     "id": deporte.id_deporte,
                     "nombre": deporte.nombre
+                }
+            )
+    db.close()
+    return res
+
+# GET/deporte/id_deporte
+@router.get("/ubicaciones/deporte/{id_deporte}")
+def obtener_ubicaciones_por_deporte(
+    id_deporte: int
+):
+    db = sesion_local()
+    relaciones = db.query(
+        UbicacionDeporte
+    ).filter(
+        UbicacionDeporte.id_deporte ==
+        id_deporte
+    ).all()
+    res = []
+    for relacion in relaciones:
+        ubicacion = db.query(
+            Ubicacion
+        ).filter(
+            Ubicacion.id_ubicacion ==
+            relacion.id_ubicacion
+        ).first()
+        if ubicacion:
+            res.append(
+                {
+                    "id": ubicacion.id_ubicacion,
+                    "nombre": ubicacion.nombre,
+                    "direccion": ubicacion.direccion,
+                    "ciudad": ubicacion.ciudad,
+                    "latitud": ubicacion.latitud,
+                    "longitud": ubicacion.longitud
                 }
             )
     db.close()
