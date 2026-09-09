@@ -187,65 +187,40 @@ class _SportsViewState extends State<SportsView> {
             ),
 
             
-                GridView.count(
-                    shrinkWrap: true,
-                    primary: false,
-                    physics: const NeverScrollableScrollPhysics(),
-                    crossAxisCount: 2,
-                    childAspectRatio: 1.3,
-                    mainAxisSpacing: 20,
-                    crossAxisSpacing: 20,
-                      children: deportes.map((deporte) {
-
+                      Column(
+                        children: deportes.map((deporte) {
                         return Card(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Image.asset(
-                                obtenerImagen(
-                                  deporte["id"],
-                                ),
-                                width: 90,
-                                height: 90,
+                          child: CheckboxListTile(
+                            secondary: Image.asset(
+                              obtenerImagen(
+                                deporte["id"],
                               ),
-                              const SizedBox(height: 10),
-                              Text(
-                                deporte["nombre"],
-                              ),
-                              Checkbox(
-                                value: seleccionados.contains(
-                                  deporte["id"],
-                                ),
-                                onChanged: (value) {
-
-                                  debugPrint(
-                                    "CLICK DEPORTE ${deporte["id"]}"
+                              width: 50,
+                              height: 50,
+                            ),
+                            title: Text(
+                              deporte["nombre"],
+                            ),
+                            value: seleccionados.contains(
+                              deporte["id"],
+                            ),
+                            onChanged: (value) {
+                              setState(() {
+                                if (value == true) {
+                                  if (!seleccionados.contains(
+                                    deporte["id"],
+                                  )) {
+                                    seleccionados.add(
+                                      deporte["id"],
+                                    );
+                                  }
+                                } else {
+                                  seleccionados.remove(
+                                    deporte["id"],
                                   );
-
-                                  setState(() {
-
-                                    debugPrint(
-                                      "ANTES: $seleccionados"
-                                    );
-
-                                    if (value == true) {
-                                      seleccionados.add(
-                                        deporte["id"],
-                                      );
-                                    } else {
-                                      seleccionados.remove(
-                                        deporte["id"],
-                                      );
-                                    }
-
-                                    debugPrint(
-                                      "DESPUES: $seleccionados"
-                                    );
-
-                                  });
-                                },
-                              ),
-                            ],
+                                }
+                              });
+                            },
                           ),
                         );
                       }).toList(),
