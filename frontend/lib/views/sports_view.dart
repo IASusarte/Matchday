@@ -217,9 +217,17 @@ class _SportsViewState extends State<SportsView> {
                                   deporte["id"],
                                 ),
                                 onChanged: (value) {
-                                  print("CLICK ${deporte["id"]}");
+
+                                  debugPrint(
+                                    "CLICK DEPORTE ${deporte["id"]}"
+                                  );
 
                                   setState(() {
+
+                                    debugPrint(
+                                      "ANTES: $seleccionados"
+                                    );
+
                                     if (value == true) {
                                       seleccionados.add(
                                         deporte["id"],
@@ -229,6 +237,11 @@ class _SportsViewState extends State<SportsView> {
                                         deporte["id"],
                                       );
                                     }
+
+                                    debugPrint(
+                                      "DESPUES: $seleccionados"
+                                    );
+
                                   });
                                 },
                               ),
