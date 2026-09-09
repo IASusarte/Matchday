@@ -1,7 +1,10 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+import os
 
-DATABASE_URL = ("mysql+pymysql://root:admin123@localhost/matchday_db")
+DATABASE_URL = os.getenv(
+    "DATABASE_URL"
+)
 
 crear_motor = create_engine(DATABASE_URL)
 
