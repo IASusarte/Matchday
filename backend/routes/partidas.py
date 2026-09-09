@@ -37,6 +37,34 @@ def crear_partida(partida: CrearPartida):
         nueva_fecha_hora +
         timedelta(hours=2)
     )
+    partidas_creador = db.query(
+        Partida
+    ).filter(
+        Partida.id_creador ==
+        partida.id_creador,
+        Partida.id_estado.in_([1, 2])
+    ).all()
+    for p in partidas_creador:
+        inicio_existente = datetime.combine(
+            p.fecha,
+            p.hora
+        )
+        fin_existente = (
+            inicio_existente +
+            timedelta(hours=2)
+        )
+        if hay_traslape(
+            nueva_fecha_hora,
+            nuevo_fin,
+            inicio_existente,
+            fin_existente
+        ):
+            db.close()
+            return {
+                "ok": False,
+                "mensaje":
+                "No puede crear dos partidas en horarios simultáneos."
+            }
     partidas_misma_ubicacion = db.query(
         Partida
     ).filter(
@@ -649,3 +677,36 @@ def obtener_participantes_detalle(id: int):
     db.close()
     return res
 
+# PUT/id/cancelar
+@router.put("/partidas/{id}/cancelar")
+def cancelar_partida(id: int):
+    db = sesion_local()
+    partida = db.query(
+        Partida
+    ).filter(
+        Partida.id_partida == id
+    ).first()
+    if partida is None:
+        db.close()
+        return {
+            "ok": False,
+            "mensaje": "Partida no encontrada"
+        }
+    partida.estado = "Cancelada"
+    partida.id_estado = 5
+    solicitudes = db.query(
+        Solicitud
+    ).filter(
+        Solicitud.id_partida == id,
+        Solicitud.id_estado == 1
+    ).all()
+    for solicitud in solicitudes:
+
+        solicitud.estado = "Cancelada"
+        solicitud.id_estado = 4
+    db.commit()
+    db.close()
+    return {
+        "ok": True,
+        "mensaje": "Partida cancelada correctamente"
+    }

@@ -16,26 +16,43 @@ class _HistoryViewState extends State<HistoryView>{
   List<dynamic> preferencias = [];
   bool cargando = true;
   int? deporteSeleccionado;
+  Map<String, dynamic>? reputacion;
 
   Future<void> cargarHistorial() async {
-    final prefs = await UserApi.obtenerPreferencias(Session.usuarioId!);
-    final data = await UserApi.obtenerHistorial(Session.usuarioId!);
+    final prefs =
+        await UserApi.obtenerPreferencias(
+      Session.usuarioId!,
+    );
+    final data =
+        await UserApi.obtenerHistorial(
+      Session.usuarioId!,
+    );
     final prefsActivas = prefs.where(
       (p) => p["activo"] == true,
     ).toList();
-
+    if (prefsActivas.isNotEmpty) {
+      deporteSeleccionado =
+          prefsActivas.first["id"];
+      await cargarReputacion();
+    }
     setState(() {
-
       preferencias = prefsActivas;
-
-      if (prefsActivas.isNotEmpty) {
-        deporteSeleccionado =
-            prefsActivas.first["id"];
-      }
-
       historial = data;
-
       cargando = false;
+    });
+  }
+
+  Future<void> cargarReputacion() async {
+    if (deporteSeleccionado == null) {
+      return;
+    }
+    final data =
+        await UserApi.obtenerReputacionDeporte(
+      Session.usuarioId!,
+      deporteSeleccionado!,
+    );
+    setState(() {
+      reputacion = data;
     });
   }
 
@@ -103,17 +120,71 @@ class _HistoryViewState extends State<HistoryView>{
                     selected:
                         deporteSeleccionado ==
                         deporte["id"],
-                    onSelected: (selected) {
+                    onSelected: (selected) async {
                       setState(() {
                         deporteSeleccionado =
                             deporte["id"];
                       });
+                      await cargarReputacion();
                     },
                   ),
                 );
               },
             ),
           ),
+
+          if (reputacion != null)
+            Container(
+              margin: const EdgeInsets.all(10),
+              padding: const EdgeInsets.all(15),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius:
+                    BorderRadius.circular(10),
+              ),
+              child:
+              reputacion![
+                "cantidad_evaluaciones"
+              ] == 0
+                  ? const Text(
+                      "Sin evaluaciones",
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight:
+                            FontWeight.bold,
+                      ),
+                    )
+            : Column(
+                crossAxisAlignment:
+                    CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    reputacion!["deporte"],
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    'Compromiso: ${reputacion!["compromiso"]}',
+                  ),
+                  Text(
+                    'Puntualidad: ${reputacion!["puntualidad"]}',
+                  ),
+                  Text(
+                    'Fair Play: ${reputacion!["fairplay"]}',
+                  ),
+                  Text(
+                    'Nivel de Juego: ${reputacion!["nivel_juego"]}',
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    'Evaluaciones: ${reputacion!["cantidad_evaluaciones"]}',
+                  ),
+                ],
+              ),
+            ),
           Expanded(
             child: historialFiltrado.isEmpty
                 ? const Center(

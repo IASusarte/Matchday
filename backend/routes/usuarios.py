@@ -84,6 +84,18 @@ def crear_usuario(usuario: CrearUsuario):
             "ok": False,
             "mensaje": "Nickname ocupado"
         }
+    rut_existente = db.query(
+    Usuario
+    ).filter(
+        Usuario.rut == usuario.rut
+    ).first()
+
+    if rut_existente:
+        db.close()
+        return {
+            "ok": False,
+            "mensaje": "El RUT ya se encuentra registrado."
+        }
     nuevo_usuario = Usuario(
         rut=usuario.rut,
         nombres=usuario.nombres,
@@ -381,10 +393,11 @@ def obtener_reputacion_deporte(
         return {
             "id_deporte": id_deporte,
             "deporte": deporte.nombre,
-            "compromiso": 0,
-            "puntualidad": 0,
-            "fairplay": 0,
-            "nivel_juego": 0
+            "compromiso": None,
+            "puntualidad": None,
+            "fairplay": None,
+            "nivel_juego": None,
+            "cantidad_evaluaciones": 0
         }
     compromiso = round(
         sum(
@@ -546,40 +559,17 @@ def obtener_dashboard(id: int):
     ).filter(
         Participante.id_usuario == id
     ).count()
-    evaluaciones = db.query(
-        Evaluacion
+    solicitudes_pendientes = db.query(
+        Solicitud
     ).filter(
-        Evaluacion.id_evaluado == id
-    ).all()
-    compromiso = 0
-    puntualidad = 0
-    fairplay = 0
-    nivel_juego = 0
-    if len(evaluaciones) > 0:
-        compromiso = round(
-            sum(e.compromiso for e in evaluaciones)
-            / len(evaluaciones), 2
-        )
-        puntualidad = round(
-            sum(e.puntualidad for e in evaluaciones)
-            / len(evaluaciones), 2
-        )
-        fairplay = round(
-            sum(e.fairplay for e in evaluaciones)
-            / len(evaluaciones), 2
-        )
-        nivel_juego = round(
-            sum(e.nivel_juego for e in evaluaciones)
-            / len(evaluaciones), 2
-        )
+        Solicitud.id_usuario == id,
+        Solicitud.id_estado == 1
+    ).count()
     db.close()
     return {
         "partidas_creadas": partidas_creadas,
         "partidas_jugadas": participaciones,
-        "promedio_compromiso": compromiso,
-        "promedio_puntualidad": puntualidad,
-        "promedio_fairplay": fairplay,
-        "promedio_nivel_juego": nivel_juego
+        "solicitudes_pendientes": solicitudes_pendientes
     }
 
 # GET/id/partidas-vigentes

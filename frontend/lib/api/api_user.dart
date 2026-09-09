@@ -177,4 +177,18 @@ class UserApi {
 
     return jsonDecode(response.body);
   }
+
+  static Future<Map<String, dynamic>?>
+  obtenerReputacionDeporte(
+    int idUsuario,
+    int idDeporte,
+  ) async {
+    final response = await http.get(Uri.parse('${ApiConfig.baseUrl}/usuarios/$idUsuario/reputacion/$idDeporte'));
+    if (response.statusCode == 200) {
+      return jsonDecode(
+        response.body,
+      );
+    }
+    return null;
+  }
 }

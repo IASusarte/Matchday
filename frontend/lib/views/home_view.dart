@@ -20,14 +20,23 @@ class HomeView extends StatefulWidget {
 class _HomeViewState extends State<HomeView> {
 
   Map<String, dynamic>? usuario;
+  Map<String, dynamic>? dashboard;
+
   Future<void> cargarUsuario() async {
+    final data = await UserApi.obtenerUsuario(Session.usuarioId!);
+    if (data == null) return;
+    setState(() {
+      usuario = data;
+    });
+  }
 
-  final data = await UserApi.obtenerUsuario(Session.usuarioId!);
-
+Future<void> cargarDashboard() async {
+  final data = await UserApi.obtenerDashboard(
+    Session.usuarioId!,
+  );
   if (data == null) return;
-
   setState(() {
-    usuario = data;
+    dashboard = data;
   });
 }
 
@@ -35,12 +44,13 @@ class _HomeViewState extends State<HomeView> {
 void initState() {
   super.initState();
   cargarUsuario();
+  cargarDashboard();
 }
 
   @override
   Widget build(BuildContext context) {
 
-    if (usuario == null) {
+    if (usuario == null || dashboard == null) {
 
       return const Scaffold(
         body: Center(
@@ -50,38 +60,14 @@ void initState() {
 
     }
 
-    final partidasCreadas = 0;
-    final partidasJugadas = 0;
-    final solicitudesPendientes = 0;
-    final reputacion = 0.0;
+    final partidasCreadas =
+        dashboard?["partidas_creadas"] ?? 0;
 
+    final partidasJugadas =
+        dashboard?["partidas_jugadas"] ?? 0;
 
-    /*final partidasCreadas = testPartidas.where(
-      (p) => p.idCreador == Session.usuarioId).length;
-
-    final partidasJugadas = testParticipantes.where(
-      (p) => p.idUsuario == Session.usuarioId).length;
-
-    final solicitudesPendientes = testSolicitudes.where(
-      (s) => s.idUsuario == Session.usuarioId && 
-             s.estado == 'Pendiente').length;
-
-    final evaluaciones = testEvaluaciones.where(
-      (e) => e.idEvaluado == Session.usuarioId).toList();
-
-    double reputacion = 0;
-      if (evaluaciones.isNotEmpty) {
-        double suma = 0;
-        for (var e in evaluaciones) {
-          suma += (
-            e.compromiso +
-            e.puntualidad + 
-            e.fairplay +
-            e.niveldejuego
-            ) /4;
-        }
-        reputacion = suma / evaluaciones.length;
-      }*/
+    final solicitudesPendientes =
+        dashboard?["solicitudes_pendientes"] ?? 0;
 
     
     return Scaffold(
@@ -106,15 +92,6 @@ void initState() {
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: 24,
-                ),
-              ),
-            ),
-
-            Card(
-              child: ListTile(
-                leading: const Icon(Icons.star),
-                title: Text(
-                  'Reputación: ${reputacion.toStringAsFixed(1)} ⭐'
                 ),
               ),
             ),
@@ -151,10 +128,11 @@ void initState() {
               title: const Text('Datos personales'),
               onTap: () async {
                 Navigator.pop(context);
-                Navigator.push(
+                await Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (_) => const PersonalDataView(),
+                    builder: (_) =>
+                        const PersonalDataView(),
                   ),
                 );
                 await cargarUsuario();
@@ -166,7 +144,7 @@ void initState() {
               title: const Text('Preferencias deportivas'),
               onTap: () async {
                 Navigator.pop(context);
-                Navigator.push(
+                await Navigator.push(
                   context,
                   MaterialPageRoute(
                     builder: (_) => const SportsPreferencesView(),
@@ -236,7 +214,7 @@ void initState() {
                   ),
                 );
               },
-              child: const Text('Crear'),
+              child: const Text('Crear Partida'),
             ),
 
             const SizedBox(height: 30),
@@ -250,7 +228,7 @@ void initState() {
                   ),
                 );
               },
-              child: const Text('Unirse'),
+              child: const Text('Unirse a Partida'),
             ),
 
             const SizedBox(height: 30),
@@ -264,7 +242,7 @@ void initState() {
                   ),
                 );
               },
-              child: const Text('Partidas vigentes'),
+              child: const Text('Partidas Vigentes'),
               ),
 
               const SizedBox(height: 30),

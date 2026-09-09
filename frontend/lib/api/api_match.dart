@@ -127,4 +127,17 @@ class MatchApi {
     }
     return null;
   }
+
+  static Future<Map<String, dynamic>?>
+  cancelarPartida(
+    int idPartida,
+  ) async {
+    final response = await http.put(Uri.parse('${ApiConfig.baseUrl}/partidas/$idPartida/cancelar'));
+    if (response.statusCode == 200) {
+      return jsonDecode(
+        response.body,
+      );
+    }
+    return null;
+  }
 }

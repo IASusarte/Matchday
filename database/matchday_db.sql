@@ -1,3 +1,5 @@
+CREATE DATABASE  IF NOT EXISTS `matchday_db` /*!40100 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci */ /*!80016 DEFAULT ENCRYPTION='N' */;
+USE `matchday_db`;
 -- MySQL dump 10.13  Distrib 8.0.45, for Win64 (x86_64)
 --
 -- Host: localhost    Database: matchday_db
@@ -51,7 +53,7 @@ CREATE TABLE `estados_partida` (
   `nombre` varchar(20) NOT NULL,
   PRIMARY KEY (`id_estado`),
   UNIQUE KEY `nombre` (`nombre`)
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -60,7 +62,7 @@ CREATE TABLE `estados_partida` (
 
 LOCK TABLES `estados_partida` WRITE;
 /*!40000 ALTER TABLE `estados_partida` DISABLE KEYS */;
-INSERT INTO `estados_partida` VALUES (1,'Activa'),(3,'Cancelada'),(2,'Finalizada');
+INSERT INTO `estados_partida` VALUES (1,'Activa'),(5,'Cancelada'),(2,'Completa'),(3,'En progreso'),(4,'Finalizada');
 /*!40000 ALTER TABLE `estados_partida` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -76,7 +78,7 @@ CREATE TABLE `estados_solicitud` (
   `nombre` varchar(20) NOT NULL,
   PRIMARY KEY (`id_estado`),
   UNIQUE KEY `nombre` (`nombre`)
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -85,7 +87,7 @@ CREATE TABLE `estados_solicitud` (
 
 LOCK TABLES `estados_solicitud` WRITE;
 /*!40000 ALTER TABLE `estados_solicitud` DISABLE KEYS */;
-INSERT INTO `estados_solicitud` VALUES (2,'Aceptada'),(1,'Pendiente'),(3,'Rechazada');
+INSERT INTO `estados_solicitud` VALUES (2,'Aceptada'),(4,'Cancelada'),(1,'Pendiente'),(3,'Rechazada');
 /*!40000 ALTER TABLE `estados_solicitud` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -112,7 +114,7 @@ CREATE TABLE `evaluaciones` (
   CONSTRAINT `evaluaciones_ibfk_1` FOREIGN KEY (`id_partida`) REFERENCES `partidas` (`id_partida`),
   CONSTRAINT `evaluaciones_ibfk_2` FOREIGN KEY (`id_evaluador`) REFERENCES `usuarios` (`id_usuario`),
   CONSTRAINT `evaluaciones_ibfk_3` FOREIGN KEY (`id_evaluado`) REFERENCES `usuarios` (`id_usuario`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=15 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -140,7 +142,7 @@ CREATE TABLE `participantes_partida` (
   KEY `id_partida` (`id_partida`),
   CONSTRAINT `participantes_partida_ibfk_1` FOREIGN KEY (`id_usuario`) REFERENCES `usuarios` (`id_usuario`),
   CONSTRAINT `participantes_partida_ibfk_2` FOREIGN KEY (`id_partida`) REFERENCES `partidas` (`id_partida`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=36 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -180,7 +182,7 @@ CREATE TABLE `partidas` (
   CONSTRAINT `fk_partidas_ubicacion` FOREIGN KEY (`id_ubicacion`) REFERENCES `ubicaciones` (`id_ubicacion`),
   CONSTRAINT `partidas_ibfk_1` FOREIGN KEY (`id_creador`) REFERENCES `usuarios` (`id_usuario`),
   CONSTRAINT `partidas_ibfk_2` FOREIGN KEY (`id_deporte`) REFERENCES `deportes` (`id_deporte`)
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=29 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -189,7 +191,6 @@ CREATE TABLE `partidas` (
 
 LOCK TABLES `partidas` WRITE;
 /*!40000 ALTER TABLE `partidas` DISABLE KEYS */;
-INSERT INTO `partidas` VALUES (1,1,3,'2026-08-27','22:40:27',10,'string','string','string',NULL,NULL),(2,1,1,'2026-09-01','19:00:00',10,'Estadio Municipal','Partido amistoso','Activa',NULL,NULL),(4,1,4,'2026-08-27','22:39:33',4,'string','string','string',NULL,NULL);
 /*!40000 ALTER TABLE `partidas` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -204,12 +205,13 @@ CREATE TABLE `preferencias_deporte` (
   `id_preferencia` int NOT NULL AUTO_INCREMENT,
   `id_usuario` int NOT NULL,
   `id_deporte` int NOT NULL,
+  `activo` tinyint(1) DEFAULT '1',
   PRIMARY KEY (`id_preferencia`),
   KEY `id_usuario` (`id_usuario`),
   KEY `id_deporte` (`id_deporte`),
   CONSTRAINT `preferencias_deporte_ibfk_1` FOREIGN KEY (`id_usuario`) REFERENCES `usuarios` (`id_usuario`),
   CONSTRAINT `preferencias_deporte_ibfk_2` FOREIGN KEY (`id_deporte`) REFERENCES `deportes` (`id_deporte`)
-) ENGINE=InnoDB AUTO_INCREMENT=15 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=56 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -218,7 +220,7 @@ CREATE TABLE `preferencias_deporte` (
 
 LOCK TABLES `preferencias_deporte` WRITE;
 /*!40000 ALTER TABLE `preferencias_deporte` DISABLE KEYS */;
-INSERT INTO `preferencias_deporte` VALUES (7,8,1),(8,8,2),(10,9,4),(11,9,3),(12,1,1),(13,1,2),(14,1,4);
+INSERT INTO `preferencias_deporte` VALUES (41,8,3,1),(49,8,2,1),(50,8,1,1),(51,8,4,1);
 /*!40000 ALTER TABLE `preferencias_deporte` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -242,7 +244,7 @@ CREATE TABLE `solicitudes` (
   CONSTRAINT `fk_solicitud_estado` FOREIGN KEY (`id_estado`) REFERENCES `estados_solicitud` (`id_estado`),
   CONSTRAINT `solicitudes_ibfk_1` FOREIGN KEY (`id_usuario`) REFERENCES `usuarios` (`id_usuario`),
   CONSTRAINT `solicitudes_ibfk_2` FOREIGN KEY (`id_partida`) REFERENCES `partidas` (`id_partida`)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=25 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -251,7 +253,6 @@ CREATE TABLE `solicitudes` (
 
 LOCK TABLES `solicitudes` WRITE;
 /*!40000 ALTER TABLE `solicitudes` DISABLE KEYS */;
-INSERT INTO `solicitudes` VALUES (1,1,1,'Aceptada',NULL);
 /*!40000 ALTER TABLE `solicitudes` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -270,7 +271,7 @@ CREATE TABLE `ubicaciones` (
   `latitud` decimal(10,8) NOT NULL,
   `longitud` decimal(11,8) NOT NULL,
   PRIMARY KEY (`id_ubicacion`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=16 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -279,6 +280,7 @@ CREATE TABLE `ubicaciones` (
 
 LOCK TABLES `ubicaciones` WRITE;
 /*!40000 ALTER TABLE `ubicaciones` DISABLE KEYS */;
+INSERT INTO `ubicaciones` VALUES (1,'Estadio Español Cancha Fútbol #1','Av. España 802, Curicó','Curicó',-34.98610000,-71.22280000),(2,'Estadio Español Cancha Tenis #1','Av. España 802, Curicó','Curicó',-34.98620000,-71.22220000),(3,'Club de Tenis Curicó Cancha #1','Av. Manso de Velasco 810, Curicó','Curicó',-34.98200000,-71.23370000),(4,'Gimnasio Abraham Milad','Av. O\'Higgins 800, Curicó','Curicó',-34.98250000,-71.24480000),(5,'Gimnasio Municipal de Curicó','Av. O\'Higgins 807, Curicó','Curicó',-34.98280000,-71.24460000),(6,'Gimnasio Olímpico Curicó','Av. Arturo Alessandri 1430, Curicó','Curicó',-34.97440000,-71.22730000),(7,'Cancha Alameda','Alameda Manso de Velasco 102-180, Curicó','Curicó',-34.98960000,-71.23360000),(8,'Multicancha Santa Fe','Lago Lanalhue 1235, Villa Santa Fe, Curicó','Curicó',-34.97320000,-71.25410000),(9,'Cancha Sol de Septiembre','Rio Elqui 246, Pob. Sol de Septiembre, Curicó','Curicó',-34.98130000,-71.21530000),(10,'Estadio Nacional','Av. Grecia 2001, Ñuñoa','Santiago de Chile',-33.45870000,-70.60630000),(11,'Estadio Monumental','Av. Marathon 5300, Macul','Santiago de Chile',-33.50660000,-70.60590000),(12,'Club Deportivo Manquehue','Av. Vitacura 5841, Vitacura','Santiago de Chile',-33.40100000,-70.58300000),(13,'Club de Tenis Santiago','Av. El Cerro 151, Providencia','Santiago de Chile',-33.41400000,-70.61400000),(14,'Centro de Entrenamiento Olímpico','Ramón Cruz 1176, Ñuñoa','Santiago de Chile',-33.45600000,-70.61100000),(15,'Centro de Deportes Colectivos','Av. Grecia 2001, Ñuñoa','Santiago de Chile',-33.46000000,-70.60400000);
 /*!40000 ALTER TABLE `ubicaciones` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -298,7 +300,7 @@ CREATE TABLE `ubicaciones_deporte` (
   KEY `id_deporte` (`id_deporte`),
   CONSTRAINT `ubicaciones_deporte_ibfk_1` FOREIGN KEY (`id_ubicacion`) REFERENCES `ubicaciones` (`id_ubicacion`),
   CONSTRAINT `ubicaciones_deporte_ibfk_2` FOREIGN KEY (`id_deporte`) REFERENCES `deportes` (`id_deporte`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=23 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -307,6 +309,7 @@ CREATE TABLE `ubicaciones_deporte` (
 
 LOCK TABLES `ubicaciones_deporte` WRITE;
 /*!40000 ALTER TABLE `ubicaciones_deporte` DISABLE KEYS */;
+INSERT INTO `ubicaciones_deporte` VALUES (1,1,1),(2,7,1),(3,8,1),(4,2,2),(5,3,2),(6,4,3),(7,5,3),(8,7,3),(9,8,3),(10,6,4),(11,8,4),(12,9,1),(13,9,3),(14,10,1),(15,11,1),(16,12,2),(17,12,3),(18,12,4),(19,13,2),(20,14,3),(21,15,3),(22,15,4);
 /*!40000 ALTER TABLE `ubicaciones_deporte` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -329,8 +332,9 @@ CREATE TABLE `usuarios` (
   `sexo` varchar(20) DEFAULT NULL,
   PRIMARY KEY (`id_usuario`),
   UNIQUE KEY `correo` (`email`),
-  UNIQUE KEY `nickname` (`nickname`)
-) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+  UNIQUE KEY `nickname` (`nickname`),
+  UNIQUE KEY `rut` (`rut`)
+) ENGINE=InnoDB AUTO_INCREMENT=14 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -339,13 +343,9 @@ CREATE TABLE `usuarios` (
 
 LOCK TABLES `usuarios` WRITE;
 /*!40000 ALTER TABLE `usuarios` DISABLE KEYS */;
-INSERT INTO `usuarios` VALUES (1,'12345678-9','Ignacio','Susarte','ignacio@test.cl','ignacio01','1234','2000-01-01','Masculino'),(7,'12345678-9','Pepito','El Bandolero','bandolero@test.cl','El_bandolero','1234','2026-08-27','Masculino'),(8,'18.932.246-1','Andoni','Susarte','andoni@korta.cl','andoni04','Hola1234','1994-07-15','Masculino'),(9,'13.457.368-0','Benito','Gonzalez','Benito@ben.cl','benito','Hola1234','2000-01-01','Masculino');
+INSERT INTO `usuarios` VALUES (8,'18.932.246-1','Andoni','Susarte','andoni@korta.cl','andoni04','Hola1234','1994-07-15','Masculino');
 /*!40000 ALTER TABLE `usuarios` ENABLE KEYS */;
 UNLOCK TABLES;
-
---
--- Dumping routines for database 'matchday_db'
---
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
@@ -356,4 +356,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-09-03  2:52:44
+-- Dump completed on 2026-09-08 22:12:01

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'match_detail_view.dart';
 import '../api/api_user.dart';
 import '../data/session.dart';
-
+import '../utils/time_utils.dart';
 
 
 class ActiveMatchesView extends StatefulWidget {
@@ -123,9 +123,13 @@ class _ActiveMatchesViewState extends State<ActiveMatchesView> {
                       'Partida #${partida["id"]}',
                     ),
                     subtitle: Text(
-                      '${partida["fecha"]}\n'
-                      '${partida["hora"]}\n'
-                      '${partida["lugar"]}',
+                      '📅 ${partida["fecha"]}\n'
+                      '🕒 ${partida["hora"]}\n'
+                      '📍 ${partida["lugar"]}\n\n'
+                      '⏳ ${obtenerTiempoRestante(
+                        partida["fecha"],
+                        partida["hora"],
+                      )}',
                     ),
                     trailing:
                         const Icon(Icons.arrow_forward),
@@ -147,25 +151,6 @@ class _ActiveMatchesViewState extends State<ActiveMatchesView> {
           ),
         ],
       ),
-
-          /*Card(
-            child: ListTile(
-              title: const Text('Partido de Fútbol'),
-              subtitle: const Text(
-                '20/07/2026 - 18:00\nEstadio Municipal',
-              ),
-              trailing: const Icon(Icons.arrow_forward),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => const MatchDetailView(),
-                  ),
-                );
-              },
-            ),
-          ),*/
-        
-      );
+    );
   }
 }

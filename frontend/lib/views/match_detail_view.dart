@@ -3,6 +3,7 @@ import '../utils/sports_utils.dart';
 import '../api/api_match.dart';
 import '../api/api_request.dart';
 import '../data/session.dart';
+import '../utils/time_utils.dart';
 
 class MatchDetailView extends StatefulWidget {
   final int idPartida;
@@ -104,6 +105,16 @@ class MatchDetailView extends StatefulWidget {
 
           Text('Fecha: ${partida!["fecha"].toString()}'),
           Text('Hora: ${partida!["hora"].toString()}'),
+          Text(
+            '⏳ ${obtenerTiempoRestante(
+              partida!["fecha"].toString(),
+              partida!["hora"].toString(),
+            )}',
+            style: const TextStyle(
+              fontWeight: FontWeight.bold,
+              color: Colors.green,
+            ),
+          ),
           Text('Lugar: ${partida!["lugar"].toString()}'),
           Text('Organizador: ${partida!["organizador"].toString()}'),
           Text('Jugadores requeridos: ${partida!["cant_jugadores"].toString()}'),
@@ -111,6 +122,73 @@ class MatchDetailView extends StatefulWidget {
           Text('Participantes actuales: $participantesActuales'),
           Text('Cupos disponibles: $cuposDisponibles'),
           Text('Ocupación: ${ocupacion.toStringAsFixed(0)}%'),
+
+          const SizedBox(height: 20),
+
+          if (
+            Session.usuarioId ==
+            partida!["id_creador"]
+          )
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+              ),
+              onPressed: () async {
+                final confirmar =
+                    await showDialog<bool>(
+                  context: context,
+                  builder: (context) {
+                    return AlertDialog(
+                      title: const Text(
+                        'Cancelar partida',
+                      ),
+                      content: const Text(
+                        '¿Desea cancelar la partida?',
+                      ),
+                      actions: [
+                        TextButton(
+                          onPressed: () {
+                            Navigator.pop(
+                              context,
+                              false,
+                            );
+                          },
+                          child: const Text(
+                            'No',
+                          ),
+                        ),
+                        TextButton(
+                          onPressed: () {
+                            Navigator.pop(
+                              context,
+                              true,
+                            );
+                          },
+                          child: const Text(
+                            'Sí',
+                          ),
+                        ),
+                      ],
+                    );
+                  },
+                );
+                if (confirmar != true) {
+                  return;
+                }
+                final res =
+                    await MatchApi.cancelarPartida(
+                  partida!["id"],
+                );
+                if (!context.mounted) return;
+                if (res?["ok"] == true) {
+                  Navigator.pop(context);
+
+                }
+              },
+              child: const Text(
+                'Cancelar partida',
+              ),
+            ),
 
           if (esOrganizador)
             const Text(
@@ -288,6 +366,7 @@ class MatchDetailView extends StatefulWidget {
                                 ),
                               ),
                             );
+                            Navigator.pop(context);
                           },
                           child: const Text(
                             'Finalizar',

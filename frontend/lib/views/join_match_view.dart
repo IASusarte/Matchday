@@ -6,6 +6,7 @@ import '../api/api_user.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import '../api/api_location.dart';
+import '../utils/time_utils.dart';
 
 class JoinMatchView extends StatefulWidget {
   const JoinMatchView({super.key});
@@ -171,9 +172,13 @@ class _JoinMatchViewState extends State<JoinMatchView> {
                       'Partida #${partida["id"]}',
                     ),
                     subtitle: Text(
-                      'Lugar: ${partida["lugar"]}\n'
-                      'Fecha: ${partida["fecha"]}\n'
-                      'Hora: ${partida["hora"]}',
+                      '📍 ${partida["lugar"]}\n'
+                      '📅 ${partida["fecha"]}\n'
+                      '🕒 ${partida["hora"]}\n\n'
+                      '⏳ ${obtenerTiempoRestante(
+                        partida["fecha"],
+                        partida["hora"],
+                      )}',
                     ),
                     trailing: const Icon(
                       Icons.arrow_forward,

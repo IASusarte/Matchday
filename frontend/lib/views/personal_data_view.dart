@@ -65,16 +65,6 @@ class _PersonalDataViewState extends State<PersonalDataView>{
         ),
       );
     } 
-
-    final compromiso = (dashboard!["promedio_compromiso"] ?? 0).toDouble();
-    final puntualidad = (dashboard!["promedio_puntualidad"] ?? 0).toDouble();
-    final fairplay = (dashboard!["promedio_fairplay"] ?? 0).toDouble();
-    final nivelJuego = (dashboard!["promedio_nivel_juego"] ?? 0).toDouble();
-    final reputacionGeneral =
-                (compromiso +
-                puntualidad +
-                fairplay +
-                nivelJuego) / 4;
     
     return Scaffold(
       backgroundColor: const Color(0xFF43AAE8),
@@ -419,22 +409,6 @@ class _PersonalDataViewState extends State<PersonalDataView>{
                     fontSize: 18,
                   ),
             ),
-
-            const Text(
-              'Reputación',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 30,
-              ),
-            ),
-
-
-
-            Text('General: ${reputacionGeneral.toStringAsFixed(1)} ⭐'),
-            Text('Compromiso: $compromiso ⭐'),
-            Text('Puntualidad : $puntualidad ⭐'),
-            Text('FairPlay: $fairplay ⭐'),
-            Text('Nivel de Juego: $nivelJuego ⭐')
 
           ],
         ),

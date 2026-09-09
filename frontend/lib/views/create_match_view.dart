@@ -18,7 +18,6 @@ class _CreateMatchViewState extends State<CreateMatchView> {
 
   final TextEditingController fechaController = TextEditingController();
   final TextEditingController horaController = TextEditingController();
-  final TextEditingController cantJugadoresController = TextEditingController();
   final TextEditingController lugarController = TextEditingController();
   final TextEditingController descripcionController = TextEditingController();
 
@@ -55,7 +54,6 @@ class _CreateMatchViewState extends State<CreateMatchView> {
   void dispose() {
     fechaController.dispose();
     horaController.dispose();
-    cantJugadoresController.dispose();
     lugarController.dispose();
     descripcionController.dispose();
     super.dispose();
@@ -76,13 +74,12 @@ class _CreateMatchViewState extends State<CreateMatchView> {
     }
   }
 
+  final int minimoJugadores = 2;
   int? deporteSeleccionado;
   int? ubicacionSeleccionada;
+  int cantidadJugadores = 2;
 
   
-
-
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -137,6 +134,7 @@ class _CreateMatchViewState extends State<CreateMatchView> {
                         .obtenerUbicacionesPorDeporte(value);
                 setState(() {
                   deporteSeleccionado = value;
+                  cantidadJugadores = 2;
                   ubicaciones = ubicacionesFiltradas;
                   ubicacionSeleccionada = null;
                   lugarController.clear();
@@ -208,12 +206,64 @@ class _CreateMatchViewState extends State<CreateMatchView> {
 
             const SizedBox(height: 15),
 
-            TextField(
-              controller: cantJugadoresController,
-              decoration: const InputDecoration(
-                labelText: 'Cantidad de jugadores',
-                filled: true,
-                fillColor: Colors.white,
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Cantidad de jugadores',
+                    style: TextStyle(
+                      fontSize: 16,
+                    ),
+                  ),
+                  Row(
+                    children: [
+                      IconButton(
+                        onPressed: () {
+                          if (cantidadJugadores > 2) {
+                            setState(() {
+                              cantidadJugadores -= 2;
+                            });
+                          }
+                        },
+                        icon: const Icon(
+                          Icons.remove_circle,
+                        ),
+                      ),
+                      Text(
+                        '$cantidadJugadores',
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      IconButton(
+                        onPressed: () {
+                          if (deporteSeleccionado == null) {
+                            return;
+                          }
+                          final maxJugadores =
+                              obtenerMaximoJugadores(
+                                deporteSeleccionado!,
+                              );
+                          if (cantidadJugadores < maxJugadores) {
+                            setState(() {
+                              cantidadJugadores += 2;
+                            });
+                          }
+                        },
+                        icon: const Icon(
+                          Icons.add_circle,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ),
 
@@ -344,7 +394,6 @@ class _CreateMatchViewState extends State<CreateMatchView> {
                   deporteSeleccionado == null ||
                   fechaController.text.isEmpty ||
                   horaController.text.isEmpty ||
-                  cantJugadoresController.text.isEmpty ||
                   lugarController.text.isEmpty ||
                   ubicacionSeleccionada == null
                 ) {
@@ -356,27 +405,10 @@ class _CreateMatchViewState extends State<CreateMatchView> {
                   return;
                 }
 
-                final cant = int.tryParse(cantJugadoresController.text);
-                if(cant == null) {
+                if (cantidadJugadores < 2) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
-                      content: Text('Cantidad de jugadores debe ser numerica'),
-                    ),
-                  );
-                  return;
-                }
-                if (cant <= 0) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Cantidad de jugadores debe ser mayor a 0'),
-                    ),
-                  );
-                  return;
-                }
-                if (cant % 2 != 0) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Cantidad de jugadores debe ser par'),
+                      content: Text('Cantidad de jugadores debe ser mayor a 2'),
                     ),
                   );
                   return;
@@ -394,19 +426,8 @@ class _CreateMatchViewState extends State<CreateMatchView> {
                 }
 
 
-                /*DateTime? fecha;
-                try {
-                  fecha = DateTime.parse(fechaController.text);
-                } catch (_) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Fecha inválida. Use formato YYYY-MM-DD'),
-                    ),
-                  );
-                  return;
-                }*/
                 final maxJugadores = obtenerMaximoJugadores(deporte);
-                if (cant > maxJugadores) {
+                if (cantidadJugadores > maxJugadores) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text('Cantidad de jugadores no puede ser mayor a $maxJugadores'),
@@ -474,7 +495,7 @@ class _CreateMatchViewState extends State<CreateMatchView> {
                   fecha: DateFormat('yyyy-MM-dd')
                       .format(fechaSeleccionada),
                   hora: "${horaCompleta[0]}:${horaCompleta[1]}:00",
-                  cantJugadores: cant,
+                  cantJugadores: cantidadJugadores,
                   lugar: lugarController.text,
                   descripcion: descripcionController.text,
                   idUbicacion: ubicacionSeleccionada!,
@@ -517,8 +538,7 @@ class _CreateMatchViewState extends State<CreateMatchView> {
 
                 fechaController.clear();
                 horaController.clear();
-                cantJugadoresController.clear();
-                //lugarController.clear();
+                lugarController.clear();
                 descripcionController.clear();
 
                 setState(() {
