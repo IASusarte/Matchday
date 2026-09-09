@@ -157,7 +157,8 @@ class _SportsViewState extends State<SportsView> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFF43AAE8),
-      body: Padding(
+      body: SafeArea(
+        child: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Column(
           children: [
@@ -186,7 +187,7 @@ class _SportsViewState extends State<SportsView> {
             ),
 
             SizedBox(
-                height: 500,
+                height: MediaQuery.of(context).size.height * 0.5,
 
             
                 child: GridView.count(
@@ -247,6 +248,7 @@ class _SportsViewState extends State<SportsView> {
           ],
         ),
       ),
+    ),
     );
   }
 

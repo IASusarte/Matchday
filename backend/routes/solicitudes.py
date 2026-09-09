@@ -14,18 +14,29 @@ from schems.solicitud_schem import CrearSolicitud
 @router.post("/solicitudes")
 def crear_solicitud(datos: CrearSolicitud):
     db = sesion_local()
-    solicitud_existente = db.query(
+    solicitud_activa = db.query(
         Solicitud
     ).filter(
         Solicitud.id_usuario == datos.id_usuario,
-        Solicitud.id_partida == datos.id_partida
+        Solicitud.id_partida == datos.id_partida,
+        Solicitud.id_estado.in_([1, 2])
     ).first()
-    if solicitud_existente:
+    if solicitud_activa:
         db.close()
         return {
             "ok": False,
             "mensaje": "Ya existe una solicitud para esta partida"
         }
+    solicitudes_antiguas = db.query(
+        Solicitud
+    ).filter(
+        Solicitud.id_usuario == datos.id_usuario,
+        Solicitud.id_partida == datos.id_partida,
+        Solicitud.id_estado.in_([3, 4])
+    ).all()
+    for solicitud in solicitudes_antiguas:
+        db.delete(solicitud)
+    db.commit()
     nueva_solicitud = Solicitud(
         id_usuario=datos.id_usuario,
         id_partida=datos.id_partida,
@@ -35,11 +46,12 @@ def crear_solicitud(datos: CrearSolicitud):
     db.add(nueva_solicitud)
     db.commit()
     db.refresh(nueva_solicitud)
-    db.close()
-    return {
+    resultado = {
         "ok": True,
         "id": nueva_solicitud.id_solicitud
     }
+    db.close()
+    return resultado
 
 # GET
 @router.get("/solicitudes")
