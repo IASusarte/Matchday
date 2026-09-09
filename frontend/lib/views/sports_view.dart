@@ -186,11 +186,10 @@ class _SportsViewState extends State<SportsView> {
               ),
             ),
 
-            SizedBox(
-                height: MediaQuery.of(context).size.height * 0.5,
-
             
-                child: GridView.count(
+                GridView.count(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
                     crossAxisCount: 2,
                     childAspectRatio: 1.3,
                     mainAxisSpacing: 20,
@@ -235,7 +234,7 @@ class _SportsViewState extends State<SportsView> {
                         );
                       }).toList(),
               ),
-            ),
+            
 
             ElevatedButton(
               onPressed: finalizarRegistro,
