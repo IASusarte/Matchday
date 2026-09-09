@@ -189,6 +189,7 @@ class _SportsViewState extends State<SportsView> {
             
                 GridView.count(
                     shrinkWrap: true,
+                    primary: false,
                     physics: const NeverScrollableScrollPhysics(),
                     crossAxisCount: 2,
                     childAspectRatio: 1.3,
@@ -216,6 +217,8 @@ class _SportsViewState extends State<SportsView> {
                                   deporte["id"],
                                 ),
                                 onChanged: (value) {
+                                  print("CLICK ${deporte["id"]}");
+
                                   setState(() {
                                     if (value == true) {
                                       seleccionados.add(
@@ -234,6 +237,8 @@ class _SportsViewState extends State<SportsView> {
                         );
                       }).toList(),
               ),
+
+              
             
 
             ElevatedButton(
