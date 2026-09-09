@@ -84,7 +84,8 @@ class MatchDetailView extends StatefulWidget {
         title: const Text('Detalle de la partida'),
       ),
 
-  body: Padding(
+body: SingleChildScrollView(
+  child: Padding(
   padding: const EdgeInsets.all(20),
   child: Card(
     child: Padding(
@@ -488,6 +489,7 @@ class MatchDetailView extends StatefulWidget {
     ),
   ),
 ),
+)
     );
   }
 }
