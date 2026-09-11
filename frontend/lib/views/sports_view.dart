@@ -143,6 +143,9 @@ class _SportsViewState extends State<SportsView> {
     final data = await ApiSports.obtenerDeportes();
     setState(() {
       deportes = data;
+      seleccionados = data
+          .map<int>((d) => d["id"])
+          .toList();
     });
   }
 
