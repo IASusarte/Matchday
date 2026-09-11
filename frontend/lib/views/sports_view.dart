@@ -31,7 +31,7 @@ class _SportsViewState extends State<SportsView> {
   }
 
   List<dynamic> deportes = [];
-  List<int> seleccionados = [];
+  List<int> seleccionados = [1, 2, 3, 4];
 
   Future<void> finalizarRegistro() async {
       if (seleccionados.isEmpty) {
