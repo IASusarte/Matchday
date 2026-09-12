@@ -23,12 +23,19 @@ class _JoinMatchViewState extends State<JoinMatchView> {
 
   Future<void> cargarPartidas() async {
     final data = await MatchApi.obtenerPartidasActivas();
-    final preferencias = await UserApi.obtenerPreferencias(Session.usuarioId!);
-    final partidasUsuario = await UserApi.obtenerPartidasVigentes(Session.usuarioId!);
-    final deportesPermitidos =
-        preferencias.map<int>(
+    final preferencias = await UserApi.obtenerPreferencias(
+      Session.usuarioId!,
+    );
+
+    final deportesPermitidos = preferencias
+        .where(
+          (p) => p["activo"] == true,
+        )
+        .map<int>(
           (p) => p["id"],
-        ).toList();
+        )
+        .toList();
+    final partidasUsuario = await UserApi.obtenerPartidasVigentes(Session.usuarioId!);
     final idsPartidasUsuario =
     partidasUsuario
         .map<int>((p) => p["id"])
